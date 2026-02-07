@@ -10,43 +10,45 @@
     body { box-sizing: border-box; font-family: 'Assistant', sans-serif; background-color: #0f172a; color: white; margin: 0; }
     .table-card { transition: all 0.3s ease; }
     .tab-active { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: white; }
-    .modal-backdrop { background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px); }
-    .timer-warning { animation: pulse 1s ease-in-out infinite; }
+    .modal-backdrop { background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(12px); }
+    .timer-warning { animation: pulse 1s ease-in-out infinite; color: #f87171; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-    .scrollbar-thin::-webkit-scrollbar { width: 5px; }
+    .scrollbar-thin::-webkit-scrollbar { width: 5px; height: 5px; }
     .scrollbar-thin::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    .category-label { border-right: 3px solid #6366f1; padding-right: 8px; margin: 12px 0 6px 0; font-weight: 800; font-size: 0.75rem; color: #a5b4fc; text-transform: uppercase; }
   </style>
  </head>
  <body class="h-full overflow-hidden">
   <div id="app" class="h-full flex flex-col">
-   <header class="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between shadow-xl">
-     <h1 class="text-2xl font-black text-indigo-500 tracking-tighter uppercase">ATMOS LOUNGE</h1>
+   <header class="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between shadow-2xl">
      <div class="flex items-center gap-4">
-        <div id="current-time" class="text-xs text-gray-500 font-mono hidden md:block"></div>
-        <div class="bg-gray-800 px-3 py-1.5 rounded-xl text-sm border border-gray-700">
+        <h1 class="text-2xl font-black text-indigo-500 tracking-tighter uppercase">ATMOS</h1>
+        <div id="date-time-display" class="text-[10px] text-gray-500 font-mono leading-tight"></div>
+     </div>
+     <div class="flex items-center gap-3">
+        <div class="bg-gray-800 px-3 py-1.5 rounded-xl text-xs border border-gray-700">
             עובד: <span id="current-staff-name" class="font-bold text-indigo-400">מנהל</span>
+            <button onclick="changeUser()" class="mr-2 text-indigo-300 underline underline-offset-2 hover:text-white transition-colors">החלף</button>
         </div>
      </div>
    </header>
 
    <nav class="bg-gray-900 px-4 py-2 flex gap-2 border-b border-gray-800 overflow-x-auto scrollbar-thin">
-     <button onclick="switchTab('tables')" id="tab-tables" class="tab-btn tab-active px-5 py-2 rounded-xl text-sm font-bold transition-all">🪑 שולחנות</button>
-     <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn bg-gray-800 px-5 py-2 rounded-xl text-sm font-bold text-gray-400">📦 מלאי</button>
-     <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn bg-gray-800 px-5 py-2 rounded-xl text-sm font-bold text-gray-400">📊 אנליטיקס</button>
-     <button onclick="switchTab('archive')" id="tab-archive" class="tab-btn bg-gray-800 px-5 py-2 rounded-xl text-sm font-bold text-gray-400">🗂️ ארכיון</button>
+     <button onclick="switchTab('tables')" id="tab-tables" class="tab-btn tab-active px-5 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap">🪑 שולחנות</button>
+     <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn bg-gray-800 px-5 py-2 rounded-xl text-sm font-bold text-gray-400 transition-all whitespace-nowrap">📦 מלאי</button>
+     <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn bg-gray-800 px-5 py-2 rounded-xl text-sm font-bold text-gray-400 transition-all whitespace-nowrap">📈 אנליטיקס</button>
+     <button onclick="switchTab('archive')" id="tab-archive" class="tab-btn bg-gray-800 px-5 py-2 rounded-xl text-sm font-bold text-gray-400 transition-all whitespace-nowrap">🗂️ ארכיון</button>
    </nav>
 
    <main class="flex-1 p-4 overflow-y-auto scrollbar-thin">
     <div id="view-tables" class="view-content flex flex-col h-full">
      <div class="flex items-center justify-between mb-6">
-      <h2 class="text-xl font-extrabold text-gray-400">ניהול משמרת</h2>
+      <h2 class="text-xl font-black text-gray-400 uppercase tracking-widest">Floor Map</h2>
       <button onclick="openAddTableModal()" class="bg-indigo-600 hover:bg-indigo-500 px-6 py-2.5 rounded-2xl font-black shadow-lg shadow-indigo-500/20 active:scale-95 transition-all">
-       + פתח שולחן
+       + שולחן חדש
       </button>
      </div>
-     
      <div id="tables-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-10"></div>
-     
      <div class="mt-auto pb-10 flex justify-center">
         <button onclick="closeShift()" class="bg-red-600 hover:bg-red-500 px-16 py-5 rounded-3xl font-black text-2xl shadow-2xl transition-all active:scale-90 border-b-4 border-red-800">
             🏁 סגירת משמרת
@@ -56,30 +58,56 @@
 
     <div id="view-inventory" class="view-content hidden"><div id="inventory-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div></div>
     <div id="view-analytics" class="view-content hidden"><div id="analytics-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div></div>
-    <div id="view-archive" class="view-content hidden"><div id="archive-list" class="space-y-4 max-w-2xl mx-auto"></div></div>
+    <div id="view-archive" class="view-content hidden"><div id="archive-list" class="space-y-4 max-w-3xl mx-auto"></div></div>
    </main>
   </div>
 
-  <div id="modal-container" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4" onclick="if(event.target === this) closeModal()">
-   <div id="modal-content" class="bg-gray-900 rounded-[2.5rem] max-w-lg w-full max-h-[90vh] overflow-y-auto border border-gray-800 p-8 shadow-2xl scrollbar-thin" onclick="event.stopPropagation()"></div>
+  <div id="modal-container" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
+   <div id="modal-content" class="bg-gray-900 rounded-[2.5rem] max-w-lg w-full max-h-[90vh] overflow-y-auto border border-gray-800 p-8 shadow-2xl scrollbar-thin"></div>
   </div>
 
   <script>
-    // --- Configuration ---
     const STAGES = [{n:'הכנה', d:15*60}, {n:'גחלים 1', d:30*60}, {n:'גחלים 2', d:30*60}];
+    
     const menuItems = [
-      { id: 'f1', name: 'Pinkman', price: 85, cat: 'מועדפים' },
-      { id: 'f2', name: 'Lemon Mint', price: 80, cat: 'מועדפים' },
-      { id: 'f3', name: 'Ice Blueberry Mint', price: 80, cat: 'מועדפים' },
-      { id: 'm1', name: 'Purple Skitlzz', price: 80, cat: 'Mono' },
-      { id: 'ds1', name: 'Cosmo Flower', price: 90, cat: 'Darkside' },
-      { id: 'mh1', name: 'Nord Star', price: 90, cat: 'Musthave' },
-      { id: 'mx1', name: 'chill%thrill', price: 95, cat: 'Mixes' }
+      { id: 'f1', name: 'Pinkman', price: 85, category: 'מועדפים' },
+      { id: 'f2', name: 'Lemon Mint', price: 80, category: 'מועדפים' },
+      { id: 'f3', name: 'Ice Blueberry Mint', price: 80, category: 'מועדפים' },
+      { id: 'm1', name: 'Purple Skitlzz', price: 80, category: 'mono' },
+      { id: 'm2', name: 'Tik Tak', price: 80, category: 'mono' },
+      { id: 'm3', name: 'Peach Apricot', price: 80, category: 'mono' },
+      { id: 'm4', name: 'Lychee Orange Strawberry', price: 80, category: 'mono' },
+      { id: 'm5', name: 'Jumango', price: 80, category: 'mono' },
+      { id: 'm6', name: 'Sour Sweet Raspberry', price: 80, category: 'mono' },
+      { id: 'm7', name: 'Ice Sweet Mango', price: 80, category: 'mono' },
+      { id: 'm8', name: 'Berries', price: 80, category: 'mono' },
+      { id: 'm9', name: 'Ice', price: 80, category: 'mono' },
+      { id: 'm10', name: 'Guava Energy Drink', price: 80, category: 'mono' },
+      { id: 'm11', name: 'Island Mix', price: 80, category: 'mono' },
+      { id: 'm12', name: 'Mono Mix', price: 80, category: 'mono' },
+      { id: 'mb1', name: 'Grape', price: 85, category: 'mono black' },
+      { id: 'mb2', name: 'Strawberry', price: 85, category: 'mono black' },
+      { id: 'mb3', name: 'Peach', price: 85, category: 'mono black' },
+      { id: 'mb4', name: 'Lychee', price: 85, category: 'mono black' },
+      { id: 'ds1', name: 'Cosmo Flower', price: 90, category: 'dark side' },
+      { id: 'ds2', name: 'Deep Blue Sea', price: 90, category: 'dark side' },
+      { id: 'ds3', name: 'Falling Star', price: 90, category: 'dark side' },
+      { id: 'ds4', name: 'Torpedo', price: 90, category: 'dark side' },
+      { id: 'mh1', name: 'Nord Star', price: 90, category: 'musthave' },
+      { id: 'mh3', name: 'Space Flavor', price: 90, category: 'musthave' },
+      { id: 'mh4', name: 'Barberry Candy', price: 90, category: 'musthave' },
+      { id: 'mh5', name: 'Must Have 60g – Cola', price: 110, category: 'musthave' },
+      { id: 'mh6', name: 'Must Have 60g – Frosty', price: 110, category: 'musthave' },
+      { id: 'mx1', name: 'chill%thrill', price: 95, category: 'מיקסים' },
+      { id: 'mx2', name: 'frooty sunset', price: 95, category: 'מיקסים' },
+      { id: 'mx3', name: 'skitzberry', price: 95, category: 'מיקסים' },
+      { id: 'mx4', name: 'tropical charge', price: 95, category: 'מיקסים' },
+      { id: 'mx5', name: 'peach breeze', price: 95, category: 'מיקסים' },
+      { id: 'mx6', name: 'berry breeze', price: 95, category: 'מיקסים' }
     ];
 
-    // --- State Management ---
     let tables = JSON.parse(localStorage.getItem('atmos_tables')) || [];
-    let daily = JSON.parse(localStorage.getItem('atmos_daily')) || { rev:0, orders:0, cash:0, credit:0, flavors:{}, log:[] };
+    let daily = JSON.parse(localStorage.getItem('atmos_daily')) || { rev:0, orders:0, cash:0, credit:0, flavors:{}, log:[], hours:{} };
     let archive = JSON.parse(localStorage.getItem('atmos_archive')) || [];
 
     function save() {
@@ -93,7 +121,6 @@
       setInterval(() => { updateClock(); tick(); }, 1000);
     }
 
-    // --- Rendering ---
     function render() {
       const grid = document.getElementById('tables-grid');
       grid.innerHTML = '';
@@ -105,7 +132,7 @@
         card.onclick = () => openTableModal(t.id);
         card.innerHTML = `
             <div class="text-3xl font-black mb-2">${t.name}</div>
-            <div class="text-[11px] font-bold bg-black/30 px-4 py-1.5 rounded-full uppercase tracking-wider">${getTimerText(t)}</div>
+            <div class="text-[11px] font-bold bg-black/30 px-4 py-1.5 rounded-full uppercase">${getTimerText(t)}</div>
             <button onclick="event.stopPropagation(); deleteTable('${t.id}')" class="absolute top-4 left-4 text-white/20 hover:text-white transition-colors">✕</button>
         `;
         grid.appendChild(card);
@@ -118,10 +145,9 @@
     function getTimerText(t) {
       if (!t.start || t.paid) return 'פנוי';
       const s = t.stage || 0;
-      if (s >= STAGES.length) return '✅ מוכן לתשלום';
+      if (s >= STAGES.length) return '✅ מוכן';
       const rem = Math.max(0, STAGES[s].d - Math.floor((Date.now() - t.start) / 1000));
-      const m = Math.floor(rem/60), sec = rem%60;
-      return `${STAGES[s].n}: ${m}:${sec < 10 ? '0'+sec : sec}`;
+      return `${STAGES[s].n}: ${Math.floor(rem/60)}:${(rem%60).toString().padStart(2, '0')}`;
     }
 
     function tick() {
@@ -139,41 +165,51 @@
       render();
     }
 
-    // --- Modal Logic ---
     function openTableModal(id) {
       const t = tables.find(x => x.id === id);
       const total = (t.items || []).reduce((a,b) => a + (b.price * b.qty), 0);
       const modal = document.getElementById('modal-content');
+      const cats = ['מועדפים', 'mono', 'mono black', 'dark side', 'musthave', 'מיקסים'];
+
       modal.innerHTML = `
         <div class="flex justify-between items-center mb-8">
-            <h2 class="text-3xl font-black text-white">${t.name}</h2>
+            <h2 class="text-3xl font-black">${t.name}</h2>
             <button onclick="closeModal()" class="bg-gray-800 p-2 rounded-full text-gray-400">✕</button>
         </div>
         
         ${t.start && !t.paid ? `
-            <div class="bg-gray-800/50 p-5 rounded-3xl mb-8 flex justify-between items-center border border-gray-700 shadow-inner">
+            <div class="bg-gray-800/50 p-5 rounded-3xl mb-8 flex justify-between items-center border border-gray-700">
                 <div class="font-black text-indigo-400 text-lg">${getTimerText(t)}</div>
                 <div class="flex gap-2">
-                    <button onclick="skipTimer('${t.id}')" class="bg-indigo-600/20 text-indigo-400 px-4 py-2 rounded-xl text-xs font-black border border-indigo-500/30">דלג ➔</button>
-                    <button onclick="openPaymentModal('${t.id}')" class="bg-green-600/20 text-green-400 px-4 py-2 rounded-xl text-xs font-black border border-green-500/30">לתשלום 💰</button>
+                    <button onclick="skipTimer('${id}')" class="bg-indigo-600/20 text-indigo-400 px-3 py-2 rounded-xl text-[10px] font-black border border-indigo-500/30">דלג ➔</button>
+                    <button onclick="openPaymentModal('${id}')" class="bg-green-600/20 text-green-400 px-3 py-2 rounded-xl text-[10px] font-black border border-green-500/30">תשלום 💰</button>
                 </div>
             </div>` : ''}
 
         <div class="mb-8">
-            <h3 class="text-xs font-black text-gray-500 uppercase tracking-widest mb-4">הזמנה פעילה (₪${total})</h3>
-            <div class="max-h-40 overflow-y-auto space-y-2 pr-2 scrollbar-thin">
-                ${(t.items || []).length > 0 ? t.items.map(i => `<div class="flex justify-between bg-gray-800 p-4 rounded-2xl border border-gray-700"><span>${i.name} <b class="text-indigo-400">x${i.qty}</b></span><button onclick="removeItem('${t.id}','${i.id}')" class="text-red-500 font-bold">מחק</button></div>`).join('') : '<div class="text-gray-600 italic">אין פריטים</div>'}
+            <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Order Status</h3>
+            <div class="max-h-40 overflow-y-auto space-y-2 pr-2 scrollbar-thin text-xs">
+                ${(t.items || []).length > 0 ? t.items.map(i => `<div class="flex justify-between bg-gray-800 p-3 rounded-2xl border border-gray-700"><span>${i.name} <b class="text-indigo-400">x${i.qty}</b></span><button onclick="removeItem('${t.id}','${i.id}')" class="text-red-500 font-bold">מחק</button></div>`).join('') : '<div class="text-gray-600 italic">אין פריטים</div>'}
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 h-48 overflow-y-auto border-t border-gray-800 pt-6 scrollbar-thin">
-            ${menuItems.map(m => `<button onclick="addItem('${t.id}','${m.id}')" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-2xl text-right text-xs font-bold border border-gray-700 transition-colors">${m.name}<br><span class="text-indigo-400">₪${m.price}</span></button>`).join('')}
+        <div class="mb-6 h-60 overflow-y-auto border-t border-gray-800 pt-4 scrollbar-thin">
+            ${cats.map(cat => `
+                <div class="category-label">${cat}</div>
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    ${menuItems.filter(m => m.category === cat).map(i => `
+                        <button onclick="addItem('${t.id}','${i.id}')" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-2xl text-right text-[12px] font-bold border border-gray-700 transition-colors">
+                            ${i.name}
+                        </button>
+                    `).join('')}
+                </div>
+            `).join('')}
         </div>
 
-        <div class="mt-8">
+        <div class="mt-4">
             ${!t.start && !t.paid ? `<button onclick="startOrder('${t.id}')" class="w-full bg-indigo-600 py-5 rounded-[1.5rem] font-black text-xl shadow-xl active:scale-95 transition-all">הכנסת הזמנה</button>` : 
-            t.paid ? `<button onclick="deleteTable('${t.id}')" class="w-full bg-red-600/20 text-red-500 py-5 rounded-2xl font-black">מחק שולחן מהמסך</button>` :
-            `<button onclick="openPaymentModal('${t.id}')" class="w-full bg-green-600 py-5 rounded-[1.5rem] font-black text-xl shadow-xl active:scale-95 transition-all">לתשלום</button>`}
+            t.paid ? `<button onclick="deleteTable('${t.id}')" class="w-full bg-red-600/20 text-red-500 py-5 rounded-2xl font-black">מחק מהמסך</button>` :
+            `<button onclick="openPaymentModal('${t.id}')" class="w-full bg-green-600 py-5 rounded-[1.5rem] font-black text-xl shadow-xl active:scale-95 transition-all">לתשלום (₪${total})</button>`}
         </div>
       `;
       document.getElementById('modal-container').classList.remove('hidden');
@@ -185,27 +221,25 @@
         const modal = document.getElementById('modal-content');
         modal.innerHTML = `
             <div class="text-center">
-                <div class="text-gray-500 text-sm font-bold mb-2 uppercase">סכום סופי</div>
                 <div class="text-6xl font-black mb-10 text-indigo-400 tracking-tighter">₪${total}</div>
-                
                 <div class="mb-8 text-right px-4">
-                    <label class="text-xs text-gray-500 font-bold mr-2">סכום שהתקבל במזומן/אשראי:</label>
+                    <label class="text-[10px] text-gray-500 font-bold mr-2 uppercase">סכום ששולם:</label>
                     <input type="number" id="pay-amt" value="${total}" class="w-full bg-gray-800 border-2 border-gray-700 rounded-3xl p-5 text-center text-3xl font-black outline-none focus:border-indigo-500 mt-2">
                 </div>
-
                 <div class="grid grid-cols-2 gap-4 mb-8">
-                    <button onclick="finishPay('${id}','cash')" class="bg-gray-800 hover:bg-gray-700 p-8 rounded-[2rem] font-black border-2 border-gray-700 transition-all text-xl">💵 מזומן</button>
-                    <button onclick="finishPay('${id}','credit')" class="bg-gray-800 hover:bg-gray-700 p-8 rounded-[2rem] font-black border-2 border-gray-700 transition-all text-xl">💳 אשראי</button>
+                    <button onclick="finishPay('${id}','cash')" class="bg-gray-800 hover:bg-gray-700 p-8 rounded-[2rem] font-black border-2 border-gray-700 text-xl">💵 מזומן</button>
+                    <button onclick="finishPay('${id}','credit')" class="bg-gray-800 hover:bg-gray-700 p-8 rounded-[2rem] font-black border-2 border-gray-700 text-xl">💳 אשראי</button>
                 </div>
-                <button onclick="openTableModal('${id}')" class="text-gray-600 font-bold hover:text-white transition-colors">חזור לעריכה</button>
+                <button onclick="openTableModal('${id}')" class="text-gray-600 font-bold hover:text-white">חזור לעריכה</button>
             </div>
         `;
     }
 
-    // --- Actions ---
     function startOrder(id) {
         const t = tables.find(x => x.id === id);
         t.start = Date.now(); t.stage = 0;
+        const hour = new Date().getHours();
+        daily.hours[hour] = (daily.hours[hour] || 0) + 1;
         save(); closeModal(); render();
     }
 
@@ -215,30 +249,33 @@
         t.paid = true; t.start = null;
         daily.rev += total; daily.orders++;
         if(method === 'cash') daily.cash += total; else daily.credit += total;
-        
-        daily.log.push({ t:t.name, m:method, a:total, time: new Date().toLocaleTimeString() });
+        daily.log.push({ t:t.name, m:method, a:total, time: new Date().toLocaleTimeString('he-IL') });
         (t.items || []).forEach(i => daily.flavors[i.name] = (daily.flavors[i.name] || 0) + i.qty);
-        
         save(); closeModal(); render();
     }
 
     function closeShift() {
-        if(!confirm("🏁 סגירת משמרת? כל הנתונים יעברו לארכיון והמסך יתאפס.")) return;
-        archive.push({ date: new Date().toLocaleString('he-IL'), daily: {...daily}, tables: tables.filter(t=>t.paid) });
+        if(!confirm("סגירת משמרת? הנתונים יעברו לארכיון והמסך יתאפס.")) return;
+        archive.push({ 
+            date: new Date().toLocaleDateString('he-IL'), 
+            time: new Date().toLocaleTimeString('he-IL'),
+            id: Date.now(),
+            daily: {...daily}, 
+            tables: tables.filter(t=>t.paid) 
+        });
         tables = [];
-        daily = { rev:0, orders:0, cash:0, credit:0, flavors:{}, log:[] };
+        daily = { rev:0, orders:0, cash:0, credit:0, flavors:{}, log:[], hours:{} };
         save();
         location.reload();
     }
 
-    // --- UI Helpers ---
     function openAddTableModal() {
         const modal = document.getElementById('modal-content');
         modal.innerHTML = `
             <div class="text-center">
-                <h2 class="text-2xl font-black mb-8 text-white uppercase tracking-tighter">פתח שולחן חדש</h2>
-                <input type="text" id="new-name" placeholder="שם/מספר שולחן" class="w-full bg-gray-800 border-2 border-gray-700 rounded-3xl p-6 text-center text-2xl font-black border border-gray-700 mb-8 outline-none focus:border-indigo-500">
-                <button onclick="addTable()" class="w-full bg-indigo-600 py-5 rounded-[1.5rem] font-black text-xl shadow-xl active:scale-95 transition-all">אישור</button>
+                <h2 class="text-2xl font-black mb-8 uppercase tracking-tighter">פתח שולחן</h2>
+                <input type="text" id="new-name" placeholder="שם/מספר" class="w-full bg-gray-800 border-2 border-gray-700 rounded-3xl p-6 text-center text-3xl font-black mb-8 outline-none focus:border-indigo-500">
+                <button onclick="addTable()" class="w-full bg-indigo-600 py-5 rounded-[1.5rem] font-black text-xl active:scale-95 transition-all">אישור</button>
             </div>
         `;
         document.getElementById('modal-container').classList.remove('hidden');
@@ -248,56 +285,29 @@
     function addTable() {
         const n = document.getElementById('new-name').value;
         if(!n) return;
-        tables.push({ id: 't'+Date.now(), name: n, hue: Math.floor(Math.random()*360), items: [], paid: false, stage: 0, start: null });
-        save(); closeModal(); render();
+        const id = 't' + Date.now();
+        tables.push({ id, name: n, hue: Math.floor(Math.random()*360), items: [], paid: false, stage: 0, start: null });
+        save(); 
+        openTableModal(id);
     }
-
-    function skipTimer(id) {
-        const t = tables.find(x => x.id === id);
-        t.stage++; t.start = Date.now();
-        save(); openTableModal(id);
-    }
-
-    function addItem(tid, mid) {
-        const t = tables.find(x => x.id === tid), m = menuItems.find(x => x.id === mid);
-        const ex = t.items.find(x => x.id === mid);
-        if(ex) ex.qty++; else t.items.push({...m, qty:1});
-        save(); openTableModal(tid);
-    }
-
-    function removeItem(tid, mid) {
-        const t = tables.find(x => x.id === tid);
-        t.items = t.items.filter(x => x.id !== mid);
-        save(); openTableModal(tid);
-    }
-
-    function deleteTable(id) { if(confirm("למחוק?")) { tables = tables.filter(x => x.id !== id); save(); render(); } }
-
-    function switchTab(id) {
-        document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
-        document.getElementById('view-'+id).classList.remove('hidden');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active', 'text-white'));
-        document.getElementById('tab-'+id).classList.add('tab-active');
-    }
-
-    function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
-    function updateClock() { const now = new Date(); document.getElementById('current-time').textContent = now.toLocaleTimeString('he-IL'); }
 
     function renderStats() {
-        const div = document.getElementById('analytics-grid');
-        div.innerHTML = `
+        const grid = document.getElementById('analytics-grid');
+        const peakHour = Object.entries(daily.hours).sort((a,b)=>b[1]-a[1])[0];
+        grid.innerHTML = `
             <div class="bg-gray-800 p-8 rounded-[2.5rem] border border-gray-700">
-                <h3 class="text-indigo-400 font-black mb-6 uppercase tracking-widest">🏆 טעמים מובילים</h3>
-                ${Object.entries(daily.flavors).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,q])=>`<div class="flex justify-between text-sm py-2 border-b border-gray-700/50"><span>${n}</span><b class="text-indigo-400">${q} יח'</b></div>`).join('')}
+                <h3 class="text-indigo-400 font-black mb-6 uppercase tracking-widest text-xs">🏆 טעמים מובילים</h3>
+                ${Object.entries(daily.flavors).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,q])=>`<div class="flex justify-between text-sm py-2 border-b border-gray-700/50"><span>${n}</span><b class="text-indigo-400">${q}</b></div>`).join('')}
             </div>
             <div class="bg-gray-800 p-8 rounded-[2.5rem] border border-gray-700">
-                <h3 class="text-indigo-400 font-black mb-6 uppercase tracking-widest">💰 פירוט תקבולים</h3>
+                <h3 class="text-indigo-400 font-black mb-6 uppercase tracking-widest text-xs">⏰ שעות שיא</h3>
+                <div class="text-3xl font-black text-center py-4">${peakHour ? peakHour[0] + ':00' : '--:--'}<div class="text-[10px] text-gray-500 mt-1 uppercase font-bold">${peakHour ? peakHour[1] + ' הזמנות' : 'אין נתונים'}</div></div>
+            </div>
+            <div class="bg-gray-800 p-8 rounded-[2.5rem] border border-gray-700 md:col-span-2">
+                <h3 class="text-indigo-400 font-black mb-6 uppercase tracking-widest text-xs">💰 פירוט הכנסות</h3>
                 <div class="flex justify-around mb-6 bg-gray-900 p-4 rounded-2xl">
-                    <div><div class="text-[10px] text-gray-500">מזומן</div><b class="text-green-400 text-lg">₪${daily.cash}</b></div>
-                    <div><div class="text-[10px] text-gray-500">אשראי</div><b class="text-blue-400 text-lg">₪${daily.credit}</b></div>
-                </div>
-                <div class="max-h-40 overflow-y-auto space-y-2 text-[10px] text-gray-500 pr-2 scrollbar-thin">
-                    ${daily.log.map(l => `<div class="flex justify-between"><span>${l.t} (${l.time})</span><span>₪${l.a} - ${l.m==='cash'?'מזומן':'אשראי'}</span></div>`).join('')}
+                    <div><div class="text-[10px] text-gray-500 font-bold">מזומן</div><b class="text-green-400 text-lg">₪${daily.cash}</b></div>
+                    <div><div class="text-[10px] text-gray-500 font-bold">אשראי</div><b class="text-blue-400 text-lg">₪${daily.credit}</b></div>
                 </div>
             </div>
         `;
@@ -305,17 +315,50 @@
 
     function renderArchive() {
         const list = document.getElementById('archive-list');
-        list.innerHTML = archive.slice().reverse().map(s => `
-            <div class="bg-gray-800 p-6 rounded-[2rem] border border-gray-700 flex justify-between items-center shadow-lg">
-                <div><div class="text-[10px] text-gray-500 font-bold mb-1">${s.date}</div><div class="text-2xl font-black text-green-400 tracking-tighter">₪${s.daily.rev}</div></div>
-                <div class="text-[10px] text-gray-400 text-left">${s.tables.map(t=>t.name).join(', ')}</div>
-            </div>
-        `).join('');
+        list.innerHTML = archive.slice().reverse().map(s => {
+            const peak = Object.entries(s.daily.hours || {}).sort((a,b)=>b[1]-a[1])[0];
+            return `
+            <div class="bg-gray-800 rounded-[2rem] border border-gray-700 overflow-hidden shadow-lg">
+                <div class="bg-gray-900 px-6 py-4 flex justify-between items-center cursor-pointer" onclick="toggleArchiveDetail('${s.id}')">
+                    <div><span class="font-black text-indigo-300 ml-3">${s.date}</span><span class="text-[10px] text-gray-500 uppercase">${s.time}</span></div>
+                    <div class="flex items-center gap-4"><span class="text-xl font-black text-green-400 tracking-tighter">₪${s.daily.rev}</span><button onclick="event.stopPropagation(); deleteArchive('${s.id}')" class="text-red-900 hover:text-red-500">✕</button></div>
+                </div>
+                <div id="detail-${s.id}" class="hidden p-6 border-t border-gray-800 grid grid-cols-2 md:grid-cols-4 gap-4 text-[10px]">
+                    <div><b class="block text-indigo-400 mb-1 uppercase tracking-widest">תשלום:</b> מזומן: ₪${s.daily.cash}<br>אשראי: ₪${s.daily.credit}</div>
+                    <div><b class="block text-indigo-400 mb-1 uppercase tracking-widest">שעת שיא:</b> ${peak ? peak[0]+':00 ('+peak[1]+')' : '--'}</div>
+                    <div class="col-span-2"><b class="block text-indigo-400 mb-1 uppercase tracking-widest">נמכרו:</b> ${Object.entries(s.daily.flavors).map(f => f[0] + ' ('+f[1]+')').join(', ')}</div>
+                </div>
+            </div>`}).join('');
     }
 
-    function renderInventory() {
-        document.getElementById('inventory-grid').innerHTML = menuItems.map(i => `<div class="bg-gray-800 p-5 rounded-2xl border border-gray-700"><div class="text-indigo-400 text-[10px] font-black uppercase mb-1">${i.cat}</div><div class="font-bold text-lg">${i.name}</div><div class="text-gray-500 text-xs">₪${i.price}</div></div>`).join('');
+    function toggleArchiveDetail(id) { document.getElementById('detail-' + id).classList.toggle('hidden'); }
+    function deleteArchive(id) { if(confirm("מחיקת סיכום משמרת מהארכיון?")) { archive = archive.filter(x => x.id != id); save(); render(); } }
+    function skipTimer(id) { const t = tables.find(x => x.id === id); t.stage++; t.start = Date.now(); save(); openTableModal(id); }
+    function addItem(tid, mid) { 
+        const t = tables.find(x => x.id === tid), m = menuItems.find(x => x.id === mid);
+        const ex = t.items.find(x => x.id === mid);
+        if(ex) ex.qty++; else t.items.push({...m, qty:1});
+        save(); openTableModal(tid);
     }
+    function removeItem(tid, mid) { const t = tables.find(x => x.id === tid); t.items = t.items.filter(x => x.id !== mid); save(); openTableModal(tid); }
+    function deleteTable(id) { if(confirm("למחוק שולחן?")) { tables = tables.filter(x => x.id !== id); save(); render(); } }
+    function switchTab(id) {
+        document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
+        document.getElementById('view-'+id).classList.remove('hidden');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active', 'text-white'));
+        document.getElementById('tab-'+id).classList.add('tab-active');
+    }
+    function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
+    function updateClock() { 
+        const now = new Date(); 
+        const dateStr = now.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: '2-digit' });
+        document.getElementById('date-time-display').innerHTML = `${now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}<br>${dateStr}`; 
+    }
+    function changeUser() { const u = prompt("שם עובד:"); if(u) { document.getElementById('current-staff-name').textContent = u; localStorage.setItem('atmos_staff', u); } }
+    function renderInventory() { document.getElementById('inventory-grid').innerHTML = menuItems.map(i => `<div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex justify-between items-center"><div class="text-xs font-bold text-gray-300">${i.name}</div><div class="text-[10px] text-indigo-500 font-bold uppercase">${i.category}</div></div>`).join(''); }
+
+    const savedStaff = localStorage.getItem('atmos_staff');
+    if(savedStaff) document.getElementById('current-staff-name').textContent = savedStaff;
 
     init();
   </script>
