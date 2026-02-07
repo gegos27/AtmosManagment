@@ -5,12 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ATMOS - ניהול נרגילות</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
   <style>
     body { box-sizing: border-box; font-family: 'Assistant', sans-serif; background-color: #0f172a; }
-    .table-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .table-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); color: white; }
     .status-closed { opacity: 0.6; filter: saturate(0.5); }
-    .timer-warning { animation: pulse 1s ease-in-out infinite; color: white; font-weight: 800; }
+    .timer-warning { animation: pulse 1s ease-in-out infinite; font-weight: 800; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
     .tab-active { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: white; }
     .modal-backdrop { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); }
@@ -37,12 +39,12 @@
     </div>
    </header>
 
-   <nav class="bg-gray-900 px-6 py-2 flex gap-2 border-b border-gray-800 overflow-x-auto">
+   <nav class="bg-gray-900 px-6 py-2 flex gap-2 border-b border-gray-800 overflow-x-auto scrollbar-thin">
      <button onclick="switchTab('tables')" id="tab-tables" class="tab-btn tab-active px-5 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap">🪑 שולחנות</button>
-     <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn bg-gray-800 px-5 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap">📦 מלאי טבק</button>
-     <button onclick="switchTab('daily')" id="tab-daily" class="tab-btn bg-gray-800 px-5 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap">📊 סיכום יום</button>
-     <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn bg-gray-800 px-5 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap">📈 אנליטיקס</button>
-     <button onclick="switchTab('archive')" id="tab-archive" class="tab-btn bg-gray-800 px-5 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap">🗂️ ארכיון</button>
+     <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn bg-gray-800 hover:bg-gray-700 px-5 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap">📦 מלאי טבק</button>
+     <button onclick="switchTab('daily')" id="tab-daily" class="tab-btn bg-gray-800 hover:bg-gray-700 px-5 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap">📊 סיכום יום</button>
+     <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn bg-gray-800 hover:bg-gray-700 px-5 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap">📈 אנליטיקס</button>
+     <button onclick="switchTab('archive')" id="tab-archive" class="tab-btn bg-gray-800 hover:bg-gray-700 px-5 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap">🗂️ ארכיון</button>
    </nav>
 
    <main class="flex-1 p-6 overflow-y-auto scrollbar-thin">
@@ -63,16 +65,14 @@
     </div>
 
     <div id="view-inventory" class="view-content hidden">
-      <h2 class="text-xl font-bold mb-6 text-indigo-400">ניהול מלאי טבקים</h2>
       <div id="inventory-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
     </div>
 
-    <div id="view-daily" class="view-content hidden">
-        <div id="daily-summary-box" class="max-w-4xl mx-auto bg-gray-800 rounded-3xl p-8 border border-gray-700 text-center"></div>
+    <div id="view-daily" class="view-content hidden text-center">
+        <div id="daily-summary-box" class="max-w-4xl mx-auto bg-gray-800 rounded-3xl p-8 border border-gray-700"></div>
     </div>
 
     <div id="view-analytics" class="view-content hidden">
-        <h2 class="text-2xl font-bold mb-6 text-indigo-400">אנליטיקס 📊</h2>
         <div id="analytics-content" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </div>
 
@@ -87,14 +87,9 @@
    <div id="modal-content" class="bg-gray-900 rounded-3xl max-w-lg w-full max-h-[90%] overflow-y-auto border border-gray-700 shadow-2xl scrollbar-thin"></div>
   </div>
 
-  <div id="toast-container" class="fixed bottom-6 left-6 z-50 space-y-3"></div>
-
   <script>
-    const storage = {
-        save: (key, data) => localStorage.setItem('atmos_' + key, JSON.stringify(data)),
-        load: (key) => JSON.parse(localStorage.getItem('atmos_' + key)) || []
-    };
-
+    const STAGES = [{n:'זמן הכנה', d:15*60}, {n:'החלפת גחלים', d:30*60}, {n:'החלפת גחלים', d:30*60}];
+    
     const menuItems = [
       { id: 'fav1', name: 'Pinkman', price: 85, category: 'מועדפים' },
       { id: 'fav2', name: 'Lemon Mint', price: 80, category: 'מועדפים' },
@@ -132,18 +127,19 @@
       { id: 'mx6', name: 'berry breeze', price: 95, category: 'מיקסים' }
     ];
 
-    const TIMER_STAGES = [
-      { name: 'זמן הכנה', duration: 15 * 60 },
-      { name: 'החלפת גחלים', duration: 30 * 60 },
-      { name: 'החלפת גחלים', duration: 30 * 60 }
-    ];
-
-    let tables = storage.load('tables');
-    let dailyReport = JSON.parse(localStorage.getItem('atmos_daily')) || { daily_revenue: 0, daily_orders: 0, daily_cash: 0, daily_credit: 0, flavors: {}, table_rev: {}, payments: [], hour_log: {} };
+    let tables = [];
+    let dailyReport = { daily_revenue:0, daily_orders:0, daily_cash:0, daily_credit:0, flavors:{}, table_rev:{}, payments:[] };
     let archive = JSON.parse(localStorage.getItem('atmos_archive')) || [];
 
-    function initApp() {
-      renderAll();
+    async function initApp() {
+      if (window.dataSdk) {
+        await window.dataSdk.init((data) => {
+          tables = data.filter(d => d.type === 'table');
+          const dailyData = data.filter(d => d.type === 'daily');
+          if (dailyData.length > 0) dailyReport = dailyData[0];
+          renderAll();
+        });
+      }
       setInterval(() => { updateClock(); refreshTimers(); }, 1000);
     }
 
@@ -156,62 +152,56 @@
     }
 
     function renderTables() {
-      const activeGrid = document.getElementById('tables-grid');
-      activeGrid.innerHTML = '';
-
+      const grid = document.getElementById('tables-grid');
+      grid.innerHTML = '';
       tables.forEach(table => {
-        const isClosed = table.is_paid;
         const hue = table.color_hue || 220;
-        const color = isClosed ? '#334155' : `hsl(${hue}, 60%, 45%)`;
-        
+        const color = table.is_paid ? '#334155' : `hsl(${hue}, 60%, 45%)`;
         const card = document.createElement('div');
-        card.className = `table-card relative p-6 rounded-2xl shadow-xl flex flex-col items-center justify-center text-center cursor-pointer group ${isClosed ? 'status-closed' : ''}`;
+        card.className = `table-card relative p-6 rounded-2xl shadow-xl flex flex-col items-center justify-center text-center cursor-pointer group ${table.is_paid ? 'status-closed' : ''}`;
         card.style.backgroundColor = color;
         card.onclick = () => openTableModal(table);
-
         card.innerHTML = `
-          <div class="absolute top-2 right-3 text-[10px] font-black opacity-40 uppercase">#${table.table_id.slice(-3)}</div>
+          <div class="absolute top-2 right-3 text-[10px] font-black opacity-40">#${table.table_id.slice(-3)}</div>
           <h3 class="text-2xl font-black mb-2">${table.table_name}</h3>
           <div class="text-sm font-bold bg-black/20 px-4 py-1 rounded-full">${getTimerDisplay(table)}</div>
           <button onclick="event.stopPropagation(); deleteTable('${table.table_id}')" class="absolute top-2 left-2 text-white/20 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
         `;
-        activeGrid.appendChild(card);
+        grid.appendChild(card);
       });
     }
 
     function getTimerDisplay(table) {
         if (!table.timer_start_time || table.is_paid) return 'פנוי';
         const stage = table.timer_stage || 0;
-        if (stage >= TIMER_STAGES.length) return '✓ מוכן לתשלום';
+        if (stage >= STAGES.length) return '✓ מוכן לתשלום';
         const elapsed = Math.floor((Date.now() - table.timer_start_time) / 1000);
-        const remaining = Math.max(0, TIMER_STAGES[stage].duration - elapsed);
+        const remaining = Math.max(0, STAGES[stage].d - elapsed);
         const mins = Math.floor(remaining / 60);
         const secs = remaining % 60;
-        return `<span class="${remaining < 60 ? 'timer-warning' : ''}">${TIMER_STAGES[stage].name}: ${mins}:${secs.toString().padStart(2, '0')}</span>`;
+        return `<span class="${remaining < 60 ? 'timer-warning' : ''}">${STAGES[stage].n}: ${mins}:${secs.toString().padStart(2, '0')}</span>`;
     }
 
     function refreshTimers() {
-        let changed = false;
         tables.forEach(table => {
             if (table.timer_start_time && !table.is_paid) {
                 const stage = table.timer_stage || 0;
                 const elapsed = Math.floor((Date.now() - table.timer_start_time) / 1000);
-                if (elapsed >= TIMER_STAGES[stage].duration && stage < TIMER_STAGES.length) {
+                if (elapsed >= STAGES[stage].d && stage < STAGES.length) {
                     table.timer_stage = stage + 1;
                     table.timer_start_time = Date.now();
-                    changed = true;
+                    window.dataSdk.update(table);
                 }
             }
         });
-        if (changed) { storage.save('tables', tables); renderTables(); }
+        renderTables();
     }
 
     function openTableModal(table) {
       const items = table.order_items || [];
       const total = items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
       const modal = document.getElementById('modal-content');
-      
-      const categories = ['מועדפים', ...new Set(menuItems.map(m => m.category).filter(c => c !== 'מועדפים'))];
+      const cats = ['מועדפים', 'mono', 'mono black', 'dark side', 'musthave', 'מיקסים'];
 
       modal.innerHTML = `
         <div class="p-6">
@@ -222,18 +212,15 @@
           
           ${table.timer_start_time && !table.is_paid ? `
           <div class="bg-gray-800 p-4 rounded-2xl mb-6 flex justify-between items-center border border-gray-700">
-             <div>
-                <div class="text-[10px] text-gray-500 font-bold uppercase mb-1">סטטוס נוכחי</div>
-                <div class="font-bold text-indigo-400">${getTimerDisplay(table)}</div>
-             </div>
+             <div class="font-bold text-indigo-400">${getTimerDisplay(table)}</div>
              <div class="flex gap-2">
-                <button onclick="skipTimer('${table.table_id}')" class="bg-indigo-600/20 text-indigo-400 px-4 py-2 rounded-xl text-xs font-bold">דלג שלב ➔</button>
+                <button onclick="skipTimer('${table.table_id}')" class="bg-indigo-600/20 text-indigo-400 px-4 py-2 rounded-xl text-xs font-bold">דלג ➔</button>
                 <button onclick="openPaymentModal('${table.table_id}')" class="bg-green-600/20 text-green-400 px-4 py-2 rounded-xl text-xs font-bold">דילוג לתשלום 💰</button>
              </div>
           </div>` : ''}
 
           <div class="mb-6">
-            <h3 class="text-xs font-bold text-gray-500 uppercase mb-3">הזמנה (₪${total})</h3>
+            <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 tracking-widest">הזמנה (₪${total})</h3>
             <div class="space-y-2 max-h-40 overflow-y-auto pr-2 scrollbar-thin">
                 ${items.map(i => `<div class="flex justify-between bg-gray-800 p-3 rounded-xl border border-gray-700"><span>${i.name} x${i.quantity}</span><button onclick="removeFromOrder('${table.table_id}', '${i.id}')" class="text-red-500 font-bold">מחק</button></div>`).join('')}
             </div>
@@ -241,14 +228,12 @@
 
           <div class="mb-6">
             <div class="space-y-4 max-h-64 overflow-y-auto pr-2 scrollbar-thin">
-                ${categories.map(cat => `
+                ${cats.map(cat => `
                     <div>
                         <div class="menu-category-title text-indigo-300 text-[10px] uppercase mb-2">${cat}</div>
                         <div class="grid grid-cols-2 gap-2">
                             ${menuItems.filter(m => m.category === cat).map(i => `
-                                <button onclick="addToOrder('${table.table_id}', '${i.id}')" class="bg-gray-800 hover:bg-gray-700 p-3 rounded-xl text-xs border border-gray-700 text-right transition-colors font-bold">
-                                    ${i.name}<br><span class="text-gray-500">₪${i.price}</span>
-                                </button>
+                                <button onclick="addToOrder('${table.table_id}', '${i.id}')" class="bg-gray-800 p-3 rounded-xl text-right text-xs border border-gray-700 font-bold">${i.name}<br><span class="text-gray-500">₪${i.price}</span></button>
                             `).join('')}
                         </div>
                     </div>
@@ -260,7 +245,7 @@
             ${!table.timer_start_time && !table.is_paid ? `
                 <button onclick="startOrder('${table.table_id}')" class="w-full bg-indigo-600 py-4 rounded-2xl font-black text-lg">הכנסת הזמנה</button>
             ` : table.is_paid ? `
-                <button onclick="deleteTable('${table.table_id}')" class="w-full bg-red-600/20 text-red-400 py-4 rounded-2xl font-bold">מחק שולחן מהרשימה</button>
+                <button onclick="deleteTable('${table.table_id}')" class="w-full bg-red-600/20 text-red-500 py-4 rounded-2xl font-bold">מחק שולחן</button>
             ` : `
                 <button onclick="openPaymentModal('${table.table_id}')" class="w-full bg-green-600 py-4 rounded-2xl font-black text-lg">לתשלום</button>
             `}
@@ -278,64 +263,50 @@
             <div class="p-8 text-center">
                 <h2 class="text-4xl font-black mb-8 text-indigo-400">₪${total}</h2>
                 <div class="mb-6 text-right">
-                    <label class="text-xs text-gray-400 mr-1">סכום ששולם:</label>
-                    <input type="number" id="pay-received" value="${total}" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-4 text-center text-2xl font-black focus:border-indigo-500 outline-none">
+                    <label class="text-xs text-gray-400">סכום ששולם:</label>
+                    <input type="number" id="pay-received" value="${total}" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-4 text-center text-2xl font-black focus:border-indigo-500 outline-none mt-2">
                 </div>
                 <div class="grid grid-cols-2 gap-4 mb-8">
-                    <button onclick="setMethod('cash')" id="m-cash" class="bg-gray-800 p-6 rounded-3xl border-2 border-transparent font-bold">💵 מזומן</button>
-                    <button onclick="setMethod('credit')" id="m-credit" class="bg-gray-800 p-6 rounded-3xl border-2 border-transparent font-bold">💳 אשראי</button>
+                    <button onclick="window.tempMethod='cash'; document.getElementById('m-cash').style.borderColor='#6366f1'; document.getElementById('m-credit').style.borderColor='transparent';" id="m-cash" class="bg-gray-800 p-6 rounded-3xl border-2 border-transparent font-bold">💵 מזומן</button>
+                    <button onclick="window.tempMethod='credit'; document.getElementById('m-credit').style.borderColor='#6366f1'; document.getElementById('m-cash').style.borderColor='transparent';" id="m-credit" class="bg-gray-800 p-6 rounded-3xl border-2 border-transparent font-bold">💳 אשראי</button>
                 </div>
                 <button onclick="processPayment('${tableId}')" class="w-full bg-indigo-600 py-5 rounded-2xl font-black text-xl shadow-lg">סיום</button>
             </div>
         `;
         window.tempMethod = 'cash';
-        setTimeout(() => setMethod('cash'), 10);
     }
 
-    function setMethod(m) {
-        window.tempMethod = m;
-        document.getElementById('m-cash').style.borderColor = m === 'cash' ? '#6366f1' : 'transparent';
-        document.getElementById('m-credit').style.borderColor = m === 'credit' ? '#6366f1' : 'transparent';
-    }
-
-    function processPayment(tableId) {
+    async function processPayment(tableId) {
         const table = tables.find(t => t.table_id === tableId);
         const method = window.tempMethod;
-        const totalActual = table.order_items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+        const amount = table.order_items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
 
         table.is_paid = true;
         table.timer_start_time = null;
 
         dailyReport.daily_orders++;
-        dailyReport.daily_revenue += totalActual;
-        if (method === 'cash') dailyReport.daily_cash += totalActual; else dailyReport.daily_credit += totalActual;
+        dailyReport.daily_revenue += amount;
+        if (method === 'cash') dailyReport.daily_cash += amount; else dailyReport.daily_credit += amount;
         
-        dailyReport.payments.push({ table: table.table_name, method, amount: totalActual });
+        dailyReport.payments.push({ table: table.table_name, method, amount });
         table.order_items.forEach(i => dailyReport.flavors[i.name] = (dailyReport.flavors[i.name] || 0) + i.quantity);
-        dailyReport.table_rev[table.table_name] = (dailyReport.table_rev[table.table_name] || 0) + totalActual;
+        dailyReport.table_rev[table.table_name] = (dailyReport.table_rev[table.table_name] || 0) + amount;
 
-        storage.save('tables', tables);
-        localStorage.setItem('atmos_daily', JSON.stringify(dailyReport));
+        await window.dataSdk.update(table);
+        await window.dataSdk.update(dailyReport);
         closeModal();
         renderAll();
     }
 
-    function closeShift() {
-        if(!confirm("סגירת משמרת תאפס את השולחנות ותעביר את הכל לארכיון. להמשיך?")) return;
-        const shiftData = {
-            date: new Date().toLocaleString('he-IL'),
-            daily: { ...dailyReport },
-            tables: tables.filter(t => t.is_paid).map(t => ({...t}))
-        };
-        archive.push(shiftData);
+    async function closeShift() {
+        if(!confirm("סגירת משמרת תאפס שולחנות ותעביר נתונים לארכיון. המשך?")) return;
+        archive.push({ date: new Date().toLocaleString('he-IL'), daily: {...dailyReport}, tables: tables.filter(t=>t.is_paid) });
         localStorage.setItem('atmos_archive', JSON.stringify(archive));
         
-        tables = [];
-        dailyReport = { daily_revenue:0, daily_orders:0, daily_cash:0, daily_credit:0, flavors:{}, table_rev:{}, payments:[], hour_log:{} };
-        storage.save('tables', tables);
-        localStorage.setItem('atmos_daily', JSON.stringify(dailyReport));
-        renderAll();
-        switchTab('archive');
+        for(let t of tables) await window.dataSdk.delete(t);
+        dailyReport = { daily_revenue:0, daily_orders:0, daily_cash:0, daily_credit:0, flavors:{}, table_rev:{}, payments:[] };
+        await window.dataSdk.update(dailyReport);
+        location.reload();
     }
 
     function renderAnalytics() {
@@ -349,7 +320,7 @@
                 <h3 class="font-bold text-indigo-400 mb-4 underline">התפלגות תשלומים</h3>
                 <div class="text-xs mb-4">מזומן: ₪${dailyReport.daily_cash} | אשראי: ₪${dailyReport.daily_credit}</div>
                 <div class="space-y-1 max-h-32 overflow-y-auto text-[10px] text-gray-500 pr-2 scrollbar-thin">
-                    ${dailyReport.payments.map(p => `<div class="flex justify-between"><span>${p.table}</span><span>₪${p.amount} (${p.method==='cash'?'מזומן':'אשראי'})</span></div>`).join('')}
+                    ${dailyReport.payments.map(p => `<div>${p.table}: ₪${p.amount} (${p.method==='cash'?'מזומן':'אשראי'})</div>`).join('')}
                 </div>
             </div>
         `;
@@ -362,72 +333,65 @@
                 <div class="bg-gray-900 px-6 py-4 font-bold border-b border-gray-700 flex justify-between">
                     <span>${s.date}</span><span class="text-green-400">₪${s.daily.daily_revenue}</span>
                 </div>
-                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
-                    <div><b>טעמים מובילים:</b> ${Object.entries(s.daily.flavors).sort((a,b)=>b[1]-a[1]).slice(0,3).map(f=>f[0]).join(', ') || 'אין'}</div>
-                    <div><b>שולחנות:</b> ${s.tables.map(t=>t.table_name).join(', ')}</div>
+                <div class="p-6 text-[11px]">
+                    <b>טעמים:</b> ${Object.entries(s.daily.flavors).sort((a,b)=>b[1]-a[1]).slice(0,3).map(f=>f[0]).join(', ') || 'אין'}
                 </div>
             </div>
         `).join('');
     }
 
     // --- ACTIONS ---
-    function startOrder(id) {
+    async function startOrder(id) {
         const t = tables.find(x => x.table_id === id);
         t.timer_start_time = Date.now();
         t.timer_stage = 0;
-        const hour = new Date().getHours();
-        dailyReport.hour_log[hour] = (dailyReport.hour_log[hour] || 0) + 1;
-        storage.save('tables', tables);
+        await window.dataSdk.update(t);
         closeModal();
-        renderTables();
     }
-    function skipTimer(id) {
+    async function skipTimer(id) {
         const t = tables.find(x => x.table_id === id);
         t.timer_stage++; t.timer_start_time = Date.now();
-        storage.save('tables', tables); renderTables(); openTableModal(t);
+        await window.dataSdk.update(t); renderAll(); openTableModal(t);
     }
-    function addToOrder(tableId, itemId) {
+    async function addToOrder(tableId, itemId) {
         const t = tables.find(x => x.table_id === tableId);
         const m = menuItems.find(x => x.id === itemId);
         const ex = t.order_items.find(x => x.id === itemId);
         if (ex) ex.quantity++; else t.order_items.push({...m, quantity:1});
-        storage.save('tables', tables); openTableModal(t);
+        await window.dataSdk.update(t); openTableModal(t);
     }
-    function removeFromOrder(tableId, itemId) {
+    async function removeFromOrder(tableId, itemId) {
         const t = tables.find(x => x.table_id === tableId);
         t.order_items = t.order_items.filter(i => i.id !== itemId);
-        storage.save('tables', tables); openTableModal(t);
+        await window.dataSdk.update(t); openTableModal(t);
     }
-    function deleteTable(id) { if(confirm("למחוק שולחן?")) { tables = tables.filter(x => x.table_id !== id); storage.save('tables', tables); renderTables(); } }
-    function openAddTableModal() {
-        const modal = document.getElementById('modal-content');
-        modal.innerHTML = `<div class="p-8 text-center"><h2 class="text-2xl font-black mb-6">פתח שולחן</h2><input type="text" id="new-name" placeholder="שם/מספר שולחן" class="w-full bg-gray-800 border border-gray-700 rounded-2xl p-4 text-white text-center text-xl font-bold mb-6 outline-none"><button onclick="handleAddTable()" class="w-full bg-indigo-600 py-4 rounded-2xl font-bold">אישור</button></div>`;
-        openModal();
-    }
-    function handleAddTable() {
+    async function deleteTable(id) { if(confirm("מחיקת שולחן?")) { const t = tables.find(x=>x.table_id===id); await window.dataSdk.delete(t); } }
+    async function handleAddTable() {
         const n = document.getElementById('new-name').value;
         if(!n) return;
-        tables.push({ table_id: 't'+Date.now(), table_name: n, color_hue: Math.floor(Math.random()*360), order_items: [], is_paid: false, timer_stage: 0, timer_start_time: null });
-        storage.save('tables', tables); closeModal(); renderTables();
+        await window.dataSdk.create({ type:'table', table_id:'t'+Date.now(), table_name:n, color_hue:Math.floor(Math.random()*360), order_items:[], is_paid:false, timer_stage:0, timer_start_time:null });
+        closeModal();
     }
     function switchTab(id) {
         document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
         document.getElementById('view-'+id).classList.remove('hidden');
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active', 'bg-gray-800'));
         document.getElementById('tab-'+id).classList.add('tab-active');
-        if(id === 'analytics') renderAnalytics();
-        if(id === 'archive') renderArchive();
     }
     function renderDailyReport() {
         const box = document.getElementById('daily-summary-box');
-        box.innerHTML = `<h2 class="text-2xl font-black mb-4 uppercase">משמרת פעילה</h2><div class="grid grid-cols-2 gap-4"><div class="bg-gray-900 p-4 rounded-2xl">₪${dailyReport.daily_revenue}</div><div class="bg-gray-900 p-4 rounded-2xl">${dailyReport.daily_orders} הזמנות</div></div>`;
+        box.innerHTML = `<h2 class="text-2xl font-black mb-4 uppercase text-indigo-400 underline">סיכום משמרת</h2><div class="grid grid-cols-2 gap-4"><div class="bg-gray-900 p-6 rounded-2xl border border-gray-700">₪${dailyReport.daily_revenue}<br><span class="text-xs text-gray-500">הכנסה</span></div><div class="bg-gray-900 p-6 rounded-2xl border border-gray-700">${dailyReport.daily_orders}<br><span class="text-xs text-gray-500">הזמנות</span></div></div>`;
     }
     function updateClock() { document.getElementById('current-time').textContent = new Date().toLocaleTimeString('he-IL'); }
     function openModal() { document.getElementById('modal-container').classList.remove('hidden'); }
     function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
     function changeUser() { const u = prompt("שם עובד:"); if(u) document.getElementById('current-staff-name').textContent = u; }
     function renderInventory() { document.getElementById('inventory-grid').innerHTML = menuItems.map(i => `<div class="bg-gray-800 p-4 rounded-2xl border border-gray-700"><div class="text-indigo-400 text-[10px] font-bold uppercase">${i.category}</div><div class="font-bold">${i.name}</div></div>`).join(''); }
-
+    function openAddTableModal() {
+        const modal = document.getElementById('modal-content');
+        modal.innerHTML = `<div class="p-8 text-center"><h2 class="text-2xl font-black mb-6">פתח שולחן</h2><input type="text" id="new-name" placeholder="שם/מספר שולחן" class="w-full bg-gray-800 border border-gray-700 rounded-2xl p-4 text-white text-center text-xl font-bold mb-6 outline-none"><button onclick="handleAddTable()" class="w-full bg-indigo-600 py-4 rounded-2xl font-bold">אישור</button></div>`;
+        openModal();
+    }
     initApp();
   </script>
  </body>
