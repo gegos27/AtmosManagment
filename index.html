@@ -109,6 +109,7 @@
     let tables = JSON.parse(localStorage.getItem('atmos_tables')) || [];
     let daily = JSON.parse(localStorage.getItem('atmos_daily')) || { rev:0, orders:0, cash:0, credit:0, flavors:{}, log:[], hours:{} };
     let archive = JSON.parse(localStorage.getItem('atmos_archive')) || [];
+    let currentActiveTab = 'tables';
 
     function save() {
         localStorage.setItem('atmos_tables', JSON.stringify(tables));
@@ -118,10 +119,20 @@
 
     function init() {
       render();
-      setInterval(() => { updateClock(); tick(); }, 1000);
+      setInterval(() => { 
+          updateClock(); 
+          if(currentActiveTab === 'tables') tick(); 
+      }, 1000);
     }
 
     function render() {
+      if(currentActiveTab === 'tables') renderTables();
+      renderStats();
+      renderArchive();
+      renderInventory();
+    }
+
+    function renderTables() {
       const grid = document.getElementById('tables-grid');
       grid.innerHTML = '';
       tables.forEach(t => {
@@ -137,9 +148,6 @@
         `;
         grid.appendChild(card);
       });
-      renderStats();
-      renderArchive();
-      renderInventory();
     }
 
     function getTimerText(t) {
@@ -162,8 +170,18 @@
           }
         }
       });
-      if (changed) save();
-      render();
+      if (changed) {
+          save();
+          renderTables();
+      } else {
+          // עדכון טקסטואלי בלבד למניעת הבהוב
+          document.querySelectorAll('.table-card').forEach((card, idx) => {
+              if(tables[idx]) {
+                  const timerEl = card.querySelector('div:nth-child(2)');
+                  if(timerEl) timerEl.innerHTML = getTimerText(tables[idx]);
+              }
+          });
+      }
     }
 
     function openTableModal(id) {
@@ -171,7 +189,6 @@
       if (!t) return;
       const total = (t.items || []).reduce((a,b) => a + (b.price * b.qty), 0);
       const modal = document.getElementById('modal-content');
-      
       const cats = ['מועדפים', 'mono', 'mono black', 'dark side', 'musthave', 'מיקסים'];
 
       modal.innerHTML = `
@@ -179,7 +196,6 @@
             <h2 class="text-3xl font-black text-white">${t.name}</h2>
             <button onclick="closeModal()" class="bg-gray-800 p-2 rounded-full text-gray-400">✕</button>
         </div>
-        
         ${t.start && !t.paid ? `
             <div class="bg-gray-800/50 p-5 rounded-3xl mb-8 flex justify-between items-center border border-gray-700 shadow-inner">
                 <div class="font-black text-indigo-400 text-lg">${getTimerText(t)}</div>
@@ -188,27 +204,22 @@
                     <button onclick="openPaymentModal('${id}')" class="bg-green-600/20 text-green-400 px-4 py-2 rounded-xl text-[10px] font-black border border-green-500/30 tracking-tighter whitespace-nowrap">תשלום 💰</button>
                 </div>
             </div>` : ''}
-
         <div class="mb-8">
             <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Order Status (₪${total})</h3>
             <div class="max-h-40 overflow-y-auto space-y-2 pr-2 scrollbar-thin">
                 ${(t.items || []).length > 0 ? t.items.map(i => `<div class="flex justify-between bg-gray-800 p-3 rounded-2xl border border-gray-700 text-sm"><span>${i.name} <b class="text-indigo-400">x${i.qty}</b></span><button onclick="removeItem('${t.id}','${i.id}')" class="text-red-500 font-bold">מחק</button></div>`).join('') : '<div class="text-gray-600 italic text-xs">אין פריטים</div>'}
             </div>
         </div>
-
         <div class="mb-6 h-60 overflow-y-auto border-t border-gray-800 pt-4 scrollbar-thin">
             ${cats.map(cat => `
                 <div class="category-label">${cat}</div>
                 <div class="grid grid-cols-2 gap-2 mb-4">
                     ${menuItems.filter(m => m.category === cat).map(i => `
-                        <button onclick="addItem('${t.id}','${i.id}')" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-2xl text-right text-[12px] font-bold border border-gray-700 transition-colors">
-                            ${i.name}
-                        </button>
+                        <button onclick="addItem('${t.id}','${i.id}')" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-2xl text-right text-[12px] font-bold border border-gray-700 transition-colors">${i.name}</button>
                     `).join('')}
                 </div>
             `).join('')}
         </div>
-
         <div class="mt-4">
             ${!t.start && !t.paid ? `<button onclick="startOrder('${t.id}')" class="w-full bg-indigo-600 py-5 rounded-[1.5rem] font-black text-xl shadow-xl active:scale-95 transition-all">הכנסת הזמנה</button>` : 
             t.paid ? `<button onclick="deleteTable('${t.id}')" class="w-full bg-red-600/20 text-red-500 py-5 rounded-2xl font-black">מחק מהמסך</button>` :
@@ -297,6 +308,7 @@
 
     function renderStats() {
         const grid = document.getElementById('analytics-grid');
+        if(!grid) return;
         const peakHour = Object.entries(daily.hours).sort((a,b)=>b[1]-a[1])[0];
         grid.innerHTML = `
             <div class="bg-gray-800 p-8 rounded-[2.5rem] border border-gray-700">
@@ -319,24 +331,38 @@
 
     function renderArchive() {
         const list = document.getElementById('archive-list');
+        if(!list) return;
         list.innerHTML = archive.slice().reverse().map(s => {
             const peak = Object.entries(s.daily.hours || {}).sort((a,b)=>b[1]-a[1])[0];
             return `
             <div class="bg-gray-800 rounded-[2rem] border border-gray-700 overflow-hidden shadow-lg">
-                <div class="bg-gray-900 px-6 py-4 flex justify-between items-center cursor-pointer" onclick="toggleArchiveDetail('${s.id}')">
-                    <div><span class="font-black text-indigo-300 ml-3">${s.date}</span><span class="text-[10px] text-gray-500 uppercase">${s.time}</span></div>
-                    <div class="flex items-center gap-4"><span class="text-xl font-black text-green-400 tracking-tighter">₪${s.daily.rev}</span><button onclick="event.stopPropagation(); deleteArchive('${s.id}')" class="text-red-900 hover:text-red-500">✕</button></div>
+                <div class="bg-gray-900 px-6 py-4 flex justify-between items-center cursor-pointer" onclick="toggleArchiveDetail(event, '${s.id}')">
+                    <span class="font-black text-indigo-300 ml-3">${s.date}</span>
+                    <div class="flex items-center gap-4">
+                        <span class="text-xl font-black text-green-400 tracking-tighter">₪${s.daily.rev}</span>
+                        <button onclick="event.stopPropagation(); deleteArchive('${s.id}')" class="text-red-900 hover:text-red-500">✕</button>
+                    </div>
                 </div>
                 <div id="detail-${s.id}" class="hidden p-6 border-t border-gray-800 grid grid-cols-2 md:grid-cols-4 gap-4 text-[10px]">
-                    <div><b class="block text-indigo-400 mb-1 uppercase tracking-widest">תשלום:</b> מזומן: ₪${s.daily.cash}<br>אשראי: ₪${s.daily.credit}</div>
-                    <div><b class="block text-indigo-400 mb-1 uppercase tracking-widest">שעת שיא:</b> ${peak ? peak[0]+':00 ('+peak[1]+')' : '--'}</div>
-                    <div class="col-span-2"><b class="block text-indigo-400 mb-1 uppercase tracking-widest">נמכרו:</b> ${Object.entries(s.daily.flavors || {}).map(f => f[0] + ' ('+f[1]+')').join(', ')}</div>
+                    <div><b class="block text-indigo-400 mb-1 uppercase tracking-widest text-[9px]">תשלום:</b> מזומן: ₪${s.daily.cash}<br>אשראי: ₪${s.daily.credit}</div>
+                    <div><b class="block text-indigo-400 mb-1 uppercase tracking-widest text-[9px]">שעת שיא:</b> ${peak ? peak[0]+':00 ('+peak[1]+')' : '--'}</div>
+                    <div class="col-span-2"><b class="block text-indigo-400 mb-1 uppercase tracking-widest text-[9px]">נמכרו:</b> ${Object.entries(s.daily.flavors || {}).map(f => f[0] + ' ('+f[1]+')').join(', ')}</div>
                 </div>
             </div>`}).join('');
     }
 
-    function toggleArchiveDetail(id) { const el = document.getElementById('detail-' + id); if(el) el.classList.toggle('hidden'); }
-    function deleteArchive(id) { if(confirm("מחיקת סיכום משמרת מהארכיון?")) { archive = archive.filter(x => x.id != id); save(); render(); } }
+    function toggleArchiveDetail(event, id) {
+        event.preventDefault();
+        const el = document.getElementById('detail-' + id);
+        if(el) {
+            const isHidden = el.classList.contains('hidden');
+            // סגירת כל שאר הלשוניות (אופציונלי)
+            document.querySelectorAll('[id^="detail-"]').forEach(d => d.classList.add('hidden'));
+            if(isHidden) el.classList.remove('hidden');
+        }
+    }
+
+    function deleteArchive(id) { if(confirm("מחיקת סיכום משמרת מהארכיון?")) { archive = archive.filter(x => x.id != id); save(); renderArchive(); } }
     function skipTimer(id) { const t = tables.find(x => x.id === id); if(t) { t.stage++; t.start = Date.now(); save(); openTableModal(id); } }
     function addItem(tid, mid) { 
         const t = tables.find(x => x.id === tid), m = menuItems.find(x => x.id === mid);
@@ -346,12 +372,14 @@
         save(); openTableModal(tid);
     }
     function removeItem(tid, mid) { const t = tables.find(x => x.id === tid); if(t) { t.items = t.items.filter(x => x.id !== mid); save(); openTableModal(tid); } }
-    function deleteTable(id) { if(confirm("למחוק שולחן?")) { tables = tables.filter(x => x.id !== id); save(); render(); } }
+    function deleteTable(id) { if(confirm("למחוק שולחן?")) { tables = tables.filter(x => x.id !== id); save(); renderTables(); } }
     function switchTab(id) {
+        currentActiveTab = id;
         document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
         document.getElementById('view-'+id).classList.remove('hidden');
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active', 'text-white'));
         document.getElementById('tab-'+id).classList.add('tab-active');
+        render();
     }
     function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
     function updateClock() { 
@@ -360,7 +388,10 @@
         document.getElementById('date-time-display').innerHTML = `${now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}<br>${dateStr}`; 
     }
     function changeUser() { const u = prompt("שם עובד:"); if(u) { document.getElementById('current-staff-name').textContent = u; localStorage.setItem('atmos_staff', u); } }
-    function renderInventory() { document.getElementById('inventory-grid').innerHTML = menuItems.map(i => `<div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex justify-between items-center"><div class="text-[11px] font-bold text-gray-300">${i.name}</div><div class="text-[9px] text-indigo-500 font-bold uppercase">${i.category}</div></div>`).join(''); }
+    function renderInventory() { 
+        const grid = document.getElementById('inventory-grid');
+        if(grid) grid.innerHTML = menuItems.map(i => `<div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex justify-between items-center"><div class="text-[11px] font-bold text-gray-300">${i.name}</div><div class="text-[9px] text-indigo-500 font-bold uppercase">${i.category}</div></div>`).join(''); 
+    }
 
     const savedStaff = localStorage.getItem('atmos_staff');
     if(savedStaff) document.getElementById('current-staff-name').textContent = savedStaff;
