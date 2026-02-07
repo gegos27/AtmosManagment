@@ -25,7 +25,7 @@
   <div id="app" class="h-full flex flex-col">
    <header class="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between">
     <div class="flex items-center gap-4">
-     <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+     <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
       <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 11c0 3.517-2.103 6.542-5.11 7.783L5.5 21h13l-1.39-2.217C14.103 17.542 12 14.517 12 11zM12 11V3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
      </div>
      <h1 class="text-2xl font-black tracking-tight text-white uppercase">ATMOS LOUNGE</h1>
@@ -77,8 +77,8 @@
     </div>
 
     <div id="view-archive" class="view-content hidden">
-        <h2 class="text-2xl font-bold mb-6 text-purple-400">ארכיון משמרות 🗂️</h2>
-        <div id="archive-list" class="space-y-6"></div>
+        <h2 class="text-2xl font-bold mb-6 text-purple-400 text-center">ארכיון משמרות 🗂️</h2>
+        <div id="archive-list" class="max-w-4xl mx-auto space-y-6"></div>
     </div>
    </main>
   </div>
@@ -135,8 +135,8 @@
       if (window.dataSdk) {
         await window.dataSdk.init((data) => {
           tables = data.filter(d => d.type === 'table');
-          const dailyData = data.filter(d => d.type === 'daily');
-          if (dailyData.length > 0) dailyReport = dailyData[0];
+          const dData = data.filter(d => d.type === 'daily');
+          if (dData.length > 0) dailyReport = dData[0];
           renderAll();
         });
       }
@@ -154,86 +154,83 @@
     function renderTables() {
       const grid = document.getElementById('tables-grid');
       grid.innerHTML = '';
-      tables.forEach(table => {
-        const hue = table.color_hue || 220;
-        const color = table.is_paid ? '#334155' : `hsl(${hue}, 60%, 45%)`;
+      tables.forEach(t => {
+        const hue = t.color_hue || 220;
+        const color = t.is_paid ? '#334155' : `hsl(${hue}, 60%, 45%)`;
         const card = document.createElement('div');
-        card.className = `table-card relative p-6 rounded-2xl shadow-xl flex flex-col items-center justify-center text-center cursor-pointer group ${table.is_paid ? 'status-closed' : ''}`;
+        card.className = `table-card relative p-6 rounded-2xl shadow-xl flex flex-col items-center justify-center text-center cursor-pointer group ${t.is_paid ? 'status-closed' : ''}`;
         card.style.backgroundColor = color;
-        card.onclick = () => openTableModal(table);
+        card.onclick = () => openTableModal(t);
         card.innerHTML = `
-          <div class="absolute top-2 right-3 text-[10px] font-black opacity-40">#${table.table_id.slice(-3)}</div>
-          <h3 class="text-2xl font-black mb-2">${table.table_name}</h3>
-          <div class="text-sm font-bold bg-black/20 px-4 py-1 rounded-full">${getTimerDisplay(table)}</div>
-          <button onclick="event.stopPropagation(); deleteTable('${table.table_id}')" class="absolute top-2 left-2 text-white/20 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+          <div class="absolute top-2 right-3 text-[10px] font-black opacity-40 uppercase">#${t.table_id.slice(-3)}</div>
+          <h3 class="text-2xl font-black mb-2">${t.table_name}</h3>
+          <div class="text-sm font-bold bg-black/20 px-4 py-1 rounded-full">${getTimerDisplay(t)}</div>
+          <button onclick="event.stopPropagation(); deleteTable('${t.table_id}')" class="absolute top-2 left-2 text-white/20 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
         `;
         grid.appendChild(card);
       });
     }
 
-    function getTimerDisplay(table) {
-        if (!table.timer_start_time || table.is_paid) return 'פנוי';
-        const stage = table.timer_stage || 0;
-        if (stage >= STAGES.length) return '✓ מוכן לתשלום';
-        const elapsed = Math.floor((Date.now() - table.timer_start_time) / 1000);
-        const remaining = Math.max(0, STAGES[stage].d - elapsed);
-        const mins = Math.floor(remaining / 60);
-        const secs = remaining % 60;
-        return `<span class="${remaining < 60 ? 'timer-warning' : ''}">${STAGES[stage].n}: ${mins}:${secs.toString().padStart(2, '0')}</span>`;
+    function getTimerDisplay(t) {
+        if (!t.timer_start_time || t.is_paid) return 'פנוי';
+        const s = t.timer_stage || 0;
+        if (s >= STAGES.length) return '✓ מוכן לתשלום';
+        const rem = Math.max(0, STAGES[s].d - Math.floor((Date.now() - t.timer_start_time) / 1000));
+        return `<span class="${rem < 60 ? 'timer-warning' : ''}">${STAGES[s].n}: ${Math.floor(rem/60)}:${(rem%60).toString().padStart(2,'0')}</span>`;
     }
 
     function refreshTimers() {
-        tables.forEach(table => {
-            if (table.timer_start_time && !table.is_paid) {
-                const stage = table.timer_stage || 0;
-                const elapsed = Math.floor((Date.now() - table.timer_start_time) / 1000);
-                if (elapsed >= STAGES[stage].d && stage < STAGES.length) {
-                    table.timer_stage = stage + 1;
-                    table.timer_start_time = Date.now();
-                    window.dataSdk.update(table);
+        tables.forEach(t => {
+            if (t.timer_start_time && !t.is_paid) {
+                const s = t.timer_stage || 0;
+                const elap = Math.floor((Date.now() - t.timer_start_time) / 1000);
+                if (elap >= STAGES[s].d && s < STAGES.length) {
+                    t.timer_stage = s + 1;
+                    t.timer_start_time = Date.now();
+                    window.dataSdk.update(t);
                 }
             }
         });
         renderTables();
     }
 
-    function openTableModal(table) {
-      const items = table.order_items || [];
-      const total = items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+    function openTableModal(t) {
+      const items = t.order_items || [];
+      const total = items.reduce((a, b) => a + (b.price * b.quantity), 0);
       const modal = document.getElementById('modal-content');
       const cats = ['מועדפים', 'mono', 'mono black', 'dark side', 'musthave', 'מיקסים'];
 
       modal.innerHTML = `
         <div class="p-6">
           <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-black">${table.table_name}</h2>
+            <h2 class="text-2xl font-black">${t.table_name}</h2>
             <button onclick="closeModal()" class="text-gray-500 hover:text-white text-2xl">✕</button>
           </div>
           
-          ${table.timer_start_time && !table.is_paid ? `
+          ${t.timer_start_time && !t.is_paid ? `
           <div class="bg-gray-800 p-4 rounded-2xl mb-6 flex justify-between items-center border border-gray-700">
-             <div class="font-bold text-indigo-400">${getTimerDisplay(table)}</div>
+             <div class="font-bold text-indigo-400">${getTimerDisplay(t)}</div>
              <div class="flex gap-2">
-                <button onclick="skipTimer('${table.table_id}')" class="bg-indigo-600/20 text-indigo-400 px-4 py-2 rounded-xl text-xs font-bold">דלג ➔</button>
-                <button onclick="openPaymentModal('${table.table_id}')" class="bg-green-600/20 text-green-400 px-4 py-2 rounded-xl text-xs font-bold">דילוג לתשלום 💰</button>
+                <button onclick="skipTimer('${t.table_id}')" class="bg-indigo-600/20 text-indigo-400 px-4 py-2 rounded-xl text-xs font-bold">דלג ➔</button>
+                <button onclick="openPaymentModal('${t.table_id}')" class="bg-green-600/20 text-green-400 px-4 py-2 rounded-xl text-xs font-bold">דילוג לתשלום 💰</button>
              </div>
           </div>` : ''}
 
           <div class="mb-6">
             <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 tracking-widest">הזמנה (₪${total})</h3>
             <div class="space-y-2 max-h-40 overflow-y-auto pr-2 scrollbar-thin">
-                ${items.map(i => `<div class="flex justify-between bg-gray-800 p-3 rounded-xl border border-gray-700"><span>${i.name} x${i.quantity}</span><button onclick="removeFromOrder('${table.table_id}', '${i.id}')" class="text-red-500 font-bold">מחק</button></div>`).join('')}
+                ${items.map(i => `<div class="flex justify-between bg-gray-800 p-3 rounded-xl border border-gray-700"><span>${i.name} x${i.quantity}</span><button onclick="removeFromOrder('${t.table_id}', '${i.id}')" class="text-red-500 font-bold">מחק</button></div>`).join('')}
             </div>
           </div>
 
           <div class="mb-6">
-            <div class="space-y-4 max-h-64 overflow-y-auto pr-2 scrollbar-thin">
-                ${cats.map(cat => `
+            <div class="space-y-4 max-h-64 overflow-y-auto pr-2 scrollbar-thin text-right">
+                ${cats.map(c => `
                     <div>
-                        <div class="menu-category-title text-indigo-300 text-[10px] uppercase mb-2">${cat}</div>
+                        <div class="menu-category-title text-indigo-300 text-[10px] uppercase mb-2">${c}</div>
                         <div class="grid grid-cols-2 gap-2">
-                            ${menuItems.filter(m => m.category === cat).map(i => `
-                                <button onclick="addToOrder('${table.table_id}', '${i.id}')" class="bg-gray-800 p-3 rounded-xl text-right text-xs border border-gray-700 font-bold">${i.name}<br><span class="text-gray-500">₪${i.price}</span></button>
+                            ${menuItems.filter(m => m.category === c).map(i => `
+                                <button onclick="addToOrder('${t.table_id}', '${i.id}')" class="bg-gray-800 hover:bg-gray-700 p-3 rounded-xl text-right text-xs border border-gray-700 font-bold">${i.name}<br><span class="text-gray-500">₪${i.price}</span></button>
                             `).join('')}
                         </div>
                     </div>
@@ -242,12 +239,12 @@
           </div>
 
           <div class="pt-4 border-t border-gray-800">
-            ${!table.timer_start_time && !table.is_paid ? `
-                <button onclick="startOrder('${table.table_id}')" class="w-full bg-indigo-600 py-4 rounded-2xl font-black text-lg">הכנסת הזמנה</button>
-            ` : table.is_paid ? `
-                <button onclick="deleteTable('${table.table_id}')" class="w-full bg-red-600/20 text-red-500 py-4 rounded-2xl font-bold">מחק שולחן</button>
+            ${!t.timer_start_time && !t.is_paid ? `
+                <button onclick="startOrder('${t.table_id}')" class="w-full bg-indigo-600 py-4 rounded-2xl font-black text-lg shadow-lg">הכנסת הזמנה</button>
+            ` : t.is_paid ? `
+                <button onclick="deleteTable('${t.table_id}')" class="w-full bg-red-600/20 text-red-400 py-4 rounded-2xl font-bold">מחק שולחן מהרשימה</button>
             ` : `
-                <button onclick="openPaymentModal('${table.table_id}')" class="w-full bg-green-600 py-4 rounded-2xl font-black text-lg">לתשלום</button>
+                <button onclick="openPaymentModal('${t.table_id}')" class="w-full bg-green-600 py-4 rounded-2xl font-black text-lg shadow-lg">לתשלום</button>
             `}
           </div>
         </div>
@@ -255,51 +252,52 @@
       openModal();
     }
 
-    function openPaymentModal(tableId) {
-        const table = tables.find(t => t.table_id === tableId);
-        const total = table.order_items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+    function openPaymentModal(id) {
+        const t = tables.find(x => x.table_id === id);
+        const total = t.order_items.reduce((a, b) => a + (b.price * b.quantity), 0);
         const modal = document.getElementById('modal-content');
         modal.innerHTML = `
             <div class="p-8 text-center">
                 <h2 class="text-4xl font-black mb-8 text-indigo-400">₪${total}</h2>
                 <div class="mb-6 text-right">
-                    <label class="text-xs text-gray-400">סכום ששולם:</label>
+                    <label class="text-xs text-gray-400 mr-1">סכום ששולם:</label>
                     <input type="number" id="pay-received" value="${total}" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-4 text-center text-2xl font-black focus:border-indigo-500 outline-none mt-2">
                 </div>
                 <div class="grid grid-cols-2 gap-4 mb-8">
-                    <button onclick="window.tempMethod='cash'; document.getElementById('m-cash').style.borderColor='#6366f1'; document.getElementById('m-credit').style.borderColor='transparent';" id="m-cash" class="bg-gray-800 p-6 rounded-3xl border-2 border-transparent font-bold">💵 מזומן</button>
-                    <button onclick="window.tempMethod='credit'; document.getElementById('m-credit').style.borderColor='#6366f1'; document.getElementById('m-cash').style.borderColor='transparent';" id="m-credit" class="bg-gray-800 p-6 rounded-3xl border-2 border-transparent font-bold">💳 אשראי</button>
+                    <button onclick="window.tempM='cash'; document.getElementById('m-cash').style.borderColor='#6366f1'; document.getElementById('m-credit').style.borderColor='transparent';" id="m-cash" class="bg-gray-800 p-6 rounded-3xl border-2 border-transparent font-bold">💵 מזומן</button>
+                    <button onclick="window.tempM='credit'; document.getElementById('m-credit').style.borderColor='#6366f1'; document.getElementById('m-cash').style.borderColor='transparent';" id="m-credit" class="bg-gray-800 p-6 rounded-3xl border-2 border-transparent font-bold">💳 אשראי</button>
                 </div>
-                <button onclick="processPayment('${tableId}')" class="w-full bg-indigo-600 py-5 rounded-2xl font-black text-xl shadow-lg">סיום</button>
+                <button onclick="processPayment('${id}')" class="w-full bg-indigo-600 py-5 rounded-2xl font-black text-xl shadow-lg">סיום</button>
             </div>
         `;
-        window.tempMethod = 'cash';
+        window.tempM = 'cash';
+        setTimeout(() => document.getElementById('m-cash').style.borderColor='#6366f1', 10);
     }
 
-    async function processPayment(tableId) {
-        const table = tables.find(t => t.table_id === tableId);
-        const method = window.tempMethod;
-        const amount = table.order_items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+    async function processPayment(id) {
+        const t = tables.find(x => x.table_id === id);
+        const m = window.tempM;
+        const totalActual = t.order_items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
 
-        table.is_paid = true;
-        table.timer_start_time = null;
+        t.is_paid = true;
+        t.timer_start_time = null;
 
         dailyReport.daily_orders++;
-        dailyReport.daily_revenue += amount;
-        if (method === 'cash') dailyReport.daily_cash += amount; else dailyReport.daily_credit += amount;
+        dailyReport.daily_revenue += totalActual;
+        if (m === 'cash') dailyReport.daily_cash += totalActual; else dailyReport.daily_credit += totalActual;
         
-        dailyReport.payments.push({ table: table.table_name, method, amount });
-        table.order_items.forEach(i => dailyReport.flavors[i.name] = (dailyReport.flavors[i.name] || 0) + i.quantity);
-        dailyReport.table_rev[table.table_name] = (dailyReport.table_rev[table.table_name] || 0) + amount;
+        dailyReport.payments.push({ table: t.table_name, method: m, amount: totalActual });
+        t.order_items.forEach(i => dailyReport.flavors[i.name] = (dailyReport.flavors[i.name] || 0) + i.quantity);
+        dailyReport.table_rev[t.table_name] = (dailyReport.table_rev[t.table_name] || 0) + totalActual;
 
-        await window.dataSdk.update(table);
+        await window.dataSdk.update(t);
         await window.dataSdk.update(dailyReport);
         closeModal();
         renderAll();
     }
 
     async function closeShift() {
-        if(!confirm("סגירת משמרת תאפס שולחנות ותעביר נתונים לארכיון. המשך?")) return;
+        if(!confirm("סגור משמרת? הנתונים יועברו לארכיון.")) return;
         archive.push({ date: new Date().toLocaleString('he-IL'), daily: {...dailyReport}, tables: tables.filter(t=>t.is_paid) });
         localStorage.setItem('atmos_archive', JSON.stringify(archive));
         
@@ -318,9 +316,9 @@
             </div>
             <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700">
                 <h3 class="font-bold text-indigo-400 mb-4 underline">התפלגות תשלומים</h3>
-                <div class="text-xs mb-4">מזומן: ₪${dailyReport.daily_cash} | אשראי: ₪${dailyReport.daily_credit}</div>
+                <div class="text-xs mb-4 text-gray-400">מזומן: ₪${dailyReport.daily_cash} | אשראי: ₪${dailyReport.daily_credit}</div>
                 <div class="space-y-1 max-h-32 overflow-y-auto text-[10px] text-gray-500 pr-2 scrollbar-thin">
-                    ${dailyReport.payments.map(p => `<div>${p.table}: ₪${p.amount} (${p.method==='cash'?'מזומן':'אשראי'})</div>`).join('')}
+                    ${dailyReport.payments.map(p => `<div class="flex justify-between"><span>${p.table}</span><span>₪${p.amount} (${p.method==='cash'?'מזומן':'אשראי'})</span></div>`).join('')}
                 </div>
             </div>
         `;
@@ -331,16 +329,16 @@
         list.innerHTML = archive.slice().reverse().map(s => `
             <div class="bg-gray-800 rounded-3xl border border-gray-700 overflow-hidden">
                 <div class="bg-gray-900 px-6 py-4 font-bold border-b border-gray-700 flex justify-between">
-                    <span>${s.date}</span><span class="text-green-400">₪${s.daily.daily_revenue}</span>
+                    <span>${s.date}</span><span class="text-green-400 font-black">₪${s.daily.daily_revenue}</span>
                 </div>
-                <div class="p-6 text-[11px]">
-                    <b>טעמים:</b> ${Object.entries(s.daily.flavors).sort((a,b)=>b[1]-a[1]).slice(0,3).map(f=>f[0]).join(', ') || 'אין'}
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px] text-gray-400">
+                    <div><b>טעמים מובילים:</b> ${Object.entries(s.daily.flavors).sort((a,b)=>b[1]-a[1]).slice(0,3).map(f=>f[0]).join(', ') || 'אין'}</div>
+                    <div><b>שולחנות:</b> ${s.tables.map(t=>t.table_name).join(', ')}</div>
                 </div>
             </div>
         `).join('');
     }
 
-    // --- ACTIONS ---
     async function startOrder(id) {
         const t = tables.find(x => x.table_id === id);
         t.timer_start_time = Date.now();
@@ -348,11 +346,13 @@
         await window.dataSdk.update(t);
         closeModal();
     }
+
     async function skipTimer(id) {
         const t = tables.find(x => x.table_id === id);
         t.timer_stage++; t.timer_start_time = Date.now();
         await window.dataSdk.update(t); renderAll(); openTableModal(t);
     }
+
     async function addToOrder(tableId, itemId) {
         const t = tables.find(x => x.table_id === tableId);
         const m = menuItems.find(x => x.id === itemId);
@@ -360,28 +360,34 @@
         if (ex) ex.quantity++; else t.order_items.push({...m, quantity:1});
         await window.dataSdk.update(t); openTableModal(t);
     }
+
     async function removeFromOrder(tableId, itemId) {
         const t = tables.find(x => x.table_id === tableId);
         t.order_items = t.order_items.filter(i => i.id !== itemId);
         await window.dataSdk.update(t); openTableModal(t);
     }
-    async function deleteTable(id) { if(confirm("מחיקת שולחן?")) { const t = tables.find(x=>x.table_id===id); await window.dataSdk.delete(t); } }
+
+    async function deleteTable(id) { if(confirm("למחוק שולחן?")) { const t = tables.find(x=>x.table_id===id); await window.dataSdk.delete(t); } }
+    
     async function handleAddTable() {
         const n = document.getElementById('new-name').value;
         if(!n) return;
         await window.dataSdk.create({ type:'table', table_id:'t'+Date.now(), table_name:n, color_hue:Math.floor(Math.random()*360), order_items:[], is_paid:false, timer_stage:0, timer_start_time:null });
         closeModal();
     }
+
     function switchTab(id) {
         document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
         document.getElementById('view-'+id).classList.remove('hidden');
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active', 'bg-gray-800'));
         document.getElementById('tab-'+id).classList.add('tab-active');
     }
+
     function renderDailyReport() {
         const box = document.getElementById('daily-summary-box');
-        box.innerHTML = `<h2 class="text-2xl font-black mb-4 uppercase text-indigo-400 underline">סיכום משמרת</h2><div class="grid grid-cols-2 gap-4"><div class="bg-gray-900 p-6 rounded-2xl border border-gray-700">₪${dailyReport.daily_revenue}<br><span class="text-xs text-gray-500">הכנסה</span></div><div class="bg-gray-900 p-6 rounded-2xl border border-gray-700">${dailyReport.daily_orders}<br><span class="text-xs text-gray-500">הזמנות</span></div></div>`;
+        box.innerHTML = `<h2 class="text-2xl font-black mb-6 uppercase text-indigo-400">משמרת פעילה</h2><div class="grid grid-cols-2 gap-4"><div class="bg-gray-900 p-6 rounded-2xl">₪${dailyReport.daily_revenue}<br><span class="text-xs text-gray-500">סה"כ הכנסה</span></div><div class="bg-gray-900 p-6 rounded-2xl">${dailyReport.daily_orders}<br><span class="text-xs text-gray-500">הזמנות</span></div></div>`;
     }
+
     function updateClock() { document.getElementById('current-time').textContent = new Date().toLocaleTimeString('he-IL'); }
     function openModal() { document.getElementById('modal-container').classList.remove('hidden'); }
     function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
