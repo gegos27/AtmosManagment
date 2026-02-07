@@ -132,7 +132,7 @@
         card.onclick = () => openTableModal(t.id);
         card.innerHTML = `
             <div class="text-3xl font-black mb-2">${t.name}</div>
-            <div class="text-[11px] font-bold bg-black/30 px-4 py-1.5 rounded-full uppercase">${getTimerText(t)}</div>
+            <div class="text-[11px] font-bold bg-black/30 px-4 py-1.5 rounded-full uppercase tracking-wider">${getTimerText(t)}</div>
             <button onclick="event.stopPropagation(); deleteTable('${t.id}')" class="absolute top-4 left-4 text-white/20 hover:text-white transition-colors">✕</button>
         `;
         grid.appendChild(card);
@@ -145,9 +145,10 @@
     function getTimerText(t) {
       if (!t.start || t.paid) return 'פנוי';
       const s = t.stage || 0;
-      if (s >= STAGES.length) return '✅ מוכן';
+      if (s >= STAGES.length) return '✅ מוכן לתשלום';
       const rem = Math.max(0, STAGES[s].d - Math.floor((Date.now() - t.start) / 1000));
-      return `${STAGES[s].n}: ${Math.floor(rem/60)}:${(rem%60).toString().padStart(2, '0')}`;
+      const m = Math.floor(rem/60), sec = rem%60;
+      return `${STAGES[s].n}: ${m}:${sec < 10 ? '0'+sec : sec}`;
     }
 
     function tick() {
@@ -167,29 +168,31 @@
 
     function openTableModal(id) {
       const t = tables.find(x => x.id === id);
+      if (!t) return;
       const total = (t.items || []).reduce((a,b) => a + (b.price * b.qty), 0);
       const modal = document.getElementById('modal-content');
+      
       const cats = ['מועדפים', 'mono', 'mono black', 'dark side', 'musthave', 'מיקסים'];
 
       modal.innerHTML = `
         <div class="flex justify-between items-center mb-8">
-            <h2 class="text-3xl font-black">${t.name}</h2>
+            <h2 class="text-3xl font-black text-white">${t.name}</h2>
             <button onclick="closeModal()" class="bg-gray-800 p-2 rounded-full text-gray-400">✕</button>
         </div>
         
         ${t.start && !t.paid ? `
-            <div class="bg-gray-800/50 p-5 rounded-3xl mb-8 flex justify-between items-center border border-gray-700">
+            <div class="bg-gray-800/50 p-5 rounded-3xl mb-8 flex justify-between items-center border border-gray-700 shadow-inner">
                 <div class="font-black text-indigo-400 text-lg">${getTimerText(t)}</div>
                 <div class="flex gap-2">
-                    <button onclick="skipTimer('${id}')" class="bg-indigo-600/20 text-indigo-400 px-3 py-2 rounded-xl text-[10px] font-black border border-indigo-500/30">דלג ➔</button>
-                    <button onclick="openPaymentModal('${id}')" class="bg-green-600/20 text-green-400 px-3 py-2 rounded-xl text-[10px] font-black border border-green-500/30">תשלום 💰</button>
+                    <button onclick="skipTimer('${id}')" class="bg-indigo-600/20 text-indigo-400 px-4 py-2 rounded-xl text-[10px] font-black border border-indigo-500/30 tracking-tighter whitespace-nowrap">דלג ➔</button>
+                    <button onclick="openPaymentModal('${id}')" class="bg-green-600/20 text-green-400 px-4 py-2 rounded-xl text-[10px] font-black border border-green-500/30 tracking-tighter whitespace-nowrap">תשלום 💰</button>
                 </div>
             </div>` : ''}
 
         <div class="mb-8">
-            <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Order Status</h3>
-            <div class="max-h-40 overflow-y-auto space-y-2 pr-2 scrollbar-thin text-xs">
-                ${(t.items || []).length > 0 ? t.items.map(i => `<div class="flex justify-between bg-gray-800 p-3 rounded-2xl border border-gray-700"><span>${i.name} <b class="text-indigo-400">x${i.qty}</b></span><button onclick="removeItem('${t.id}','${i.id}')" class="text-red-500 font-bold">מחק</button></div>`).join('') : '<div class="text-gray-600 italic">אין פריטים</div>'}
+            <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Order Status (₪${total})</h3>
+            <div class="max-h-40 overflow-y-auto space-y-2 pr-2 scrollbar-thin">
+                ${(t.items || []).length > 0 ? t.items.map(i => `<div class="flex justify-between bg-gray-800 p-3 rounded-2xl border border-gray-700 text-sm"><span>${i.name} <b class="text-indigo-400">x${i.qty}</b></span><button onclick="removeItem('${t.id}','${i.id}')" class="text-red-500 font-bold">מחק</button></div>`).join('') : '<div class="text-gray-600 italic text-xs">אין פריטים</div>'}
             </div>
         </div>
 
@@ -209,7 +212,7 @@
         <div class="mt-4">
             ${!t.start && !t.paid ? `<button onclick="startOrder('${t.id}')" class="w-full bg-indigo-600 py-5 rounded-[1.5rem] font-black text-xl shadow-xl active:scale-95 transition-all">הכנסת הזמנה</button>` : 
             t.paid ? `<button onclick="deleteTable('${t.id}')" class="w-full bg-red-600/20 text-red-500 py-5 rounded-2xl font-black">מחק מהמסך</button>` :
-            `<button onclick="openPaymentModal('${t.id}')" class="w-full bg-green-600 py-5 rounded-[1.5rem] font-black text-xl shadow-xl active:scale-95 transition-all">לתשלום (₪${total})</button>`}
+            `<button onclick="openPaymentModal('${t.id}')" class="w-full bg-green-600 py-5 rounded-[1.5rem] font-black text-xl shadow-xl active:scale-95 transition-all">לתשלום</button>`}
         </div>
       `;
       document.getElementById('modal-container').classList.remove('hidden');
@@ -237,6 +240,7 @@
 
     function startOrder(id) {
         const t = tables.find(x => x.id === id);
+        if (!t) return;
         t.start = Date.now(); t.stage = 0;
         const hour = new Date().getHours();
         daily.hours[hour] = (daily.hours[hour] || 0) + 1;
@@ -260,7 +264,7 @@
             date: new Date().toLocaleDateString('he-IL'), 
             time: new Date().toLocaleTimeString('he-IL'),
             id: Date.now(),
-            daily: {...daily}, 
+            daily: JSON.parse(JSON.stringify(daily)), 
             tables: tables.filter(t=>t.paid) 
         });
         tables = [];
@@ -326,21 +330,22 @@
                 <div id="detail-${s.id}" class="hidden p-6 border-t border-gray-800 grid grid-cols-2 md:grid-cols-4 gap-4 text-[10px]">
                     <div><b class="block text-indigo-400 mb-1 uppercase tracking-widest">תשלום:</b> מזומן: ₪${s.daily.cash}<br>אשראי: ₪${s.daily.credit}</div>
                     <div><b class="block text-indigo-400 mb-1 uppercase tracking-widest">שעת שיא:</b> ${peak ? peak[0]+':00 ('+peak[1]+')' : '--'}</div>
-                    <div class="col-span-2"><b class="block text-indigo-400 mb-1 uppercase tracking-widest">נמכרו:</b> ${Object.entries(s.daily.flavors).map(f => f[0] + ' ('+f[1]+')').join(', ')}</div>
+                    <div class="col-span-2"><b class="block text-indigo-400 mb-1 uppercase tracking-widest">נמכרו:</b> ${Object.entries(s.daily.flavors || {}).map(f => f[0] + ' ('+f[1]+')').join(', ')}</div>
                 </div>
             </div>`}).join('');
     }
 
-    function toggleArchiveDetail(id) { document.getElementById('detail-' + id).classList.toggle('hidden'); }
+    function toggleArchiveDetail(id) { const el = document.getElementById('detail-' + id); if(el) el.classList.toggle('hidden'); }
     function deleteArchive(id) { if(confirm("מחיקת סיכום משמרת מהארכיון?")) { archive = archive.filter(x => x.id != id); save(); render(); } }
-    function skipTimer(id) { const t = tables.find(x => x.id === id); t.stage++; t.start = Date.now(); save(); openTableModal(id); }
+    function skipTimer(id) { const t = tables.find(x => x.id === id); if(t) { t.stage++; t.start = Date.now(); save(); openTableModal(id); } }
     function addItem(tid, mid) { 
         const t = tables.find(x => x.id === tid), m = menuItems.find(x => x.id === mid);
+        if(!t) return;
         const ex = t.items.find(x => x.id === mid);
         if(ex) ex.qty++; else t.items.push({...m, qty:1});
         save(); openTableModal(tid);
     }
-    function removeItem(tid, mid) { const t = tables.find(x => x.id === tid); t.items = t.items.filter(x => x.id !== mid); save(); openTableModal(tid); }
+    function removeItem(tid, mid) { const t = tables.find(x => x.id === tid); if(t) { t.items = t.items.filter(x => x.id !== mid); save(); openTableModal(tid); } }
     function deleteTable(id) { if(confirm("למחוק שולחן?")) { tables = tables.filter(x => x.id !== id); save(); render(); } }
     function switchTab(id) {
         document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
@@ -355,7 +360,7 @@
         document.getElementById('date-time-display').innerHTML = `${now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}<br>${dateStr}`; 
     }
     function changeUser() { const u = prompt("שם עובד:"); if(u) { document.getElementById('current-staff-name').textContent = u; localStorage.setItem('atmos_staff', u); } }
-    function renderInventory() { document.getElementById('inventory-grid').innerHTML = menuItems.map(i => `<div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex justify-between items-center"><div class="text-xs font-bold text-gray-300">${i.name}</div><div class="text-[10px] text-indigo-500 font-bold uppercase">${i.category}</div></div>`).join(''); }
+    function renderInventory() { document.getElementById('inventory-grid').innerHTML = menuItems.map(i => `<div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex justify-between items-center"><div class="text-[11px] font-bold text-gray-300">${i.name}</div><div class="text-[9px] text-indigo-500 font-bold uppercase">${i.category}</div></div>`).join(''); }
 
     const savedStaff = localStorage.getItem('atmos_staff');
     if(savedStaff) document.getElementById('current-staff-name').textContent = savedStaff;
