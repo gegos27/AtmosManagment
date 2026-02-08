@@ -1,382 +1,803 @@
 <!doctype html>
+
 <html lang="he" dir="rtl" class="h-full">
+
  <head>
+
   <meta charset="UTF-8">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ATMOS - iOS Glass Edition</title>
+
+  <title>ATMOS - ניהול נרגילות</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
+
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+
   <style>
-    :root { --glass: rgba(255, 255, 255, 0.08); --glass-border: rgba(255, 255, 255, 0.15); }
-    body { box-sizing: border-box; font-family: 'Assistant', sans-serif; background: radial-gradient(circle at top left, #1e1b4b, #0f172a, #000); color: white; margin: 0; overflow: hidden; }
-    .glass { background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 28px; }
-    .ios-btn { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid var(--glass-border); transition: all 0.2s ease; cursor: pointer; }
-    .ios-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.2); }
-    .tab-active { background: white !important; color: black !important; font-weight: 800; box-shadow: 0 8px 32px rgba(255,255,255,0.1); }
-    .table-card { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); backface-visibility: hidden; }
-    .table-card:hover { transform: translateY(-5px); }
-    .timer-warning { animation: pulse 1s infinite; background: rgba(239, 68, 68, 0.4) !important; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-    .scrollbar-thin::-webkit-scrollbar { width: 4px; }
-    .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-    .category-label { border-right: 3px solid #6366f1; padding-right: 8px; margin: 15px 0 8px 0; font-weight: 800; font-size: 0.75rem; color: #a5b4fc; text-transform: uppercase; }
+
+    body { box-sizing: border-box; font-family: 'Assistant', sans-serif; background-color: #0f172a; color: white; margin: 0; }
+
+    .table-card { transition: all 0.3s ease; }
+
+    .tab-active { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: white; }
+
+    .modal-backdrop { background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(12px); }
+
+    .timer-warning { animation: pulse 1s ease-in-out infinite; color: #f87171; }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+    .scrollbar-thin::-webkit-scrollbar { width: 5px; height: 5px; }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+
+    .category-label { border-right: 3px solid #6366f1; padding-right: 8px; margin: 12px 0 6px 0; font-weight: 800; font-size: 0.75rem; color: #a5b4fc; text-transform: uppercase; }
+
   </style>
+
  </head>
- <body class="h-full">
-  <div id="app" class="h-full flex flex-col p-4 md:p-6 gap-4">
-   
-   <header class="glass p-5 flex items-center justify-between shadow-2xl">
-     <div>
-        <h1 class="text-2xl font-black tracking-tighter">ATMOS <span class="font-thin text-gray-400 text-sm italic">MANAGEMENT</span></h1>
-        <div id="date-time-display" class="text-[10px] text-gray-500 font-bold mt-1 tracking-widest uppercase"></div>
+
+ <body class="h-full overflow-hidden">
+
+  <div id="app" class="h-full flex flex-col">
+
+   <header class="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between shadow-2xl">
+
+     <div class="flex items-center gap-4">
+
+        <h1 class="text-2xl font-black text-indigo-500 tracking-tighter uppercase">ATMOS</h1>
+
+        <div id="date-time-display" class="text-[10px] text-gray-500 font-mono leading-tight"></div>
+
      </div>
+
      <div class="flex items-center gap-3">
-        <div class="glass px-4 py-2 text-xs flex items-center gap-2 border-white/5">
-            <span id="current-staff-name" class="font-black text-indigo-400">מנהל</span>
-            <button onclick="changeUser()" class="mr-2 opacity-50 hover:opacity-100 italic">החלף</button>
+
+        <div class="bg-gray-800 px-3 py-1.5 rounded-xl text-xs border border-gray-700">
+
+            עובד: <span id="current-staff-name" class="font-bold text-indigo-400">מנהל</span>
+
+            <button onclick="changeUser()" class="mr-2 text-indigo-300 underline underline-offset-2 hover:text-white transition-colors">החלף</button>
+
         </div>
+
      </div>
+
    </header>
 
-   <nav class="glass p-1.5 flex gap-1">
-     <button onclick="switchTab('tables')" id="tab-tables" class="tab-btn tab-active flex-1 py-3 rounded-[20px] text-xs font-black transition-all">שולחנות</button>
-     <button onclick="switchTab('expenses')" id="tab-expenses" class="tab-btn flex-1 py-3 rounded-[20px] text-xs font-black text-gray-400">הוצאות</button>
-     <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn flex-1 py-3 rounded-[20px] text-xs font-black text-gray-400">אנליטיקס</button>
-     <button onclick="switchTab('archive')" id="tab-archive" class="tab-btn flex-1 py-3 rounded-[20px] text-xs font-black text-gray-400">ארכיון</button>
+
+
+   <nav class="bg-gray-900 px-4 py-2 flex gap-2 border-b border-gray-800 overflow-x-auto scrollbar-thin">
+
+     <button onclick="switchTab('tables')" id="tab-tables" class="tab-btn tab-active px-5 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap">🪑 שולחנות</button>
+
+     <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn bg-gray-800 px-5 py-2 rounded-xl text-sm font-bold text-gray-400 transition-all whitespace-nowrap">📦 מלאי</button>
+
+     <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn bg-gray-800 px-5 py-2 rounded-xl text-sm font-bold text-gray-400 transition-all whitespace-nowrap">📈 אנליטיקס</button>
+
+     <button onclick="switchTab('archive')" id="tab-archive" class="tab-btn bg-gray-800 px-5 py-2 rounded-xl text-sm font-bold text-gray-400 transition-all whitespace-nowrap">🗂️ ארכיון</button>
+
    </nav>
 
-   <main class="flex-1 overflow-y-auto scrollbar-thin rounded-[32px]">
+
+
+   <main class="flex-1 p-4 overflow-y-auto scrollbar-thin">
+
     <div id="view-tables" class="view-content flex flex-col h-full">
-        <div class="flex justify-between items-center mb-6 px-2">
-            <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Active Floor</h2>
-            <button onclick="openAddTableModal()" class="bg-white text-black px-6 py-2.5 rounded-full font-black text-xs shadow-xl active:scale-95 transition-all">+ שולחן</button>
-        </div>
-        <div id="tables-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
-        <div class="mt-auto py-8 flex justify-center">
-            <button onclick="closeShift()" class="ios-btn px-16 py-5 rounded-[32px] font-black text-xl text-red-400 border-red-500/20 shadow-2xl active:scale-90">🏁 סגירת משמרת</button>
-        </div>
+
+     <div class="flex items-center justify-between mb-6">
+
+      <h2 class="text-xl font-black text-gray-400 uppercase tracking-widest">Floor Map</h2>
+
+      <button onclick="openAddTableModal()" class="bg-indigo-600 hover:bg-indigo-500 px-6 py-2.5 rounded-2xl font-black shadow-lg shadow-indigo-500/20 active:scale-95 transition-all">
+
+       + שולחן חדש
+
+      </button>
+
+     </div>
+
+     <div id="tables-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-10"></div>
+
+     <div class="mt-auto pb-10 flex justify-center">
+
+        <button onclick="closeShift()" class="bg-red-600 hover:bg-red-500 px-16 py-5 rounded-3xl font-black text-2xl shadow-2xl transition-all active:scale-90 border-b-4 border-red-800">
+
+            🏁 סגירת משמרת
+
+        </button>
+
+     </div>
+
     </div>
 
-    <div id="view-expenses" class="view-content hidden p-2">
-        <div class="glass p-8 max-w-xl mx-auto">
-            <h2 class="text-xl font-bold mb-6 text-indigo-300">הזנת הוצאה</h2>
-            <div class="flex gap-2 mb-8">
-                <input type="text" id="exp-desc" placeholder="תיאור" class="flex-1 glass bg-transparent rounded-2xl p-4 outline-none border-white/5 focus:border-white/20">
-                <input type="number" id="exp-amt" placeholder="₪" class="w-24 glass bg-transparent rounded-2xl p-4 outline-none text-center border-white/5">
-                <button onclick="addExpense()" class="bg-indigo-600 px-6 rounded-2xl font-bold active:scale-95 transition-all">הוסף</button>
-            </div>
-            <div id="expenses-list" class="space-y-3"></div>
-        </div>
-    </div>
 
-    <div id="view-analytics" class="view-content hidden p-2">
-        <div id="analytics-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto"></div>
-    </div>
 
-    <div id="view-archive" class="view-content hidden p-2">
-        <div id="archive-list" class="space-y-4 max-w-4xl mx-auto"></div>
-    </div>
+    <div id="view-inventory" class="view-content hidden"><div id="inventory-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div></div>
+
+    <div id="view-analytics" class="view-content hidden"><div id="analytics-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div></div>
+
+    <div id="view-archive" class="view-content hidden"><div id="archive-list" class="space-y-4 max-w-3xl mx-auto"></div></div>
+
    </main>
+
   </div>
 
-  <div id="modal-container" class="hidden fixed inset-0 z-50 modal-backdrop flex items-end md:items-center justify-center p-0 md:p-4" onclick="if(event.target === this) closeModal()">
-   <div id="modal-content" class="bg-black/90 backdrop-blur-3xl w-full max-w-lg rounded-t-[40px] md:rounded-[40px] max-h-[92vh] overflow-y-auto border-t md:border border-white/10 p-8 shadow-2xl scrollbar-thin" onclick="event.stopPropagation()"></div>
+
+
+  <div id="modal-container" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
+
+   <div id="modal-content" class="bg-gray-900 rounded-[2.5rem] max-w-lg w-full max-h-[90vh] overflow-y-auto border border-gray-800 p-8 shadow-2xl scrollbar-thin"></div>
+
   </div>
+
+
 
   <script>
+
     const STAGES = [{n:'הכנה', d:15*60}, {n:'גחלים 1', d:30*60}, {n:'גחלים 2', d:30*60}];
+
     
+
     const menuItems = [
+
       { id: 'f1', name: 'Pinkman', price: 85, category: 'מועדפים' },
+
       { id: 'f2', name: 'Lemon Mint', price: 80, category: 'מועדפים' },
+
       { id: 'f3', name: 'Ice Blueberry Mint', price: 80, category: 'מועדפים' },
+
       { id: 'm1', name: 'Purple Skitlzz', price: 80, category: 'mono' },
+
       { id: 'm2', name: 'Tik Tak', price: 80, category: 'mono' },
+
       { id: 'm3', name: 'Peach Apricot', price: 80, category: 'mono' },
+
       { id: 'm4', name: 'Lychee Orange Strawberry', price: 80, category: 'mono' },
+
       { id: 'm5', name: 'Jumango', price: 80, category: 'mono' },
+
       { id: 'm6', name: 'Sour Sweet Raspberry', price: 80, category: 'mono' },
+
       { id: 'm7', name: 'Ice Sweet Mango', price: 80, category: 'mono' },
+
       { id: 'm8', name: 'Berries', price: 80, category: 'mono' },
+
       { id: 'm9', name: 'Ice', price: 80, category: 'mono' },
+
       { id: 'm10', name: 'Guava Energy Drink', price: 80, category: 'mono' },
+
       { id: 'm11', name: 'Island Mix', price: 80, category: 'mono' },
+
       { id: 'm12', name: 'Mono Mix', price: 80, category: 'mono' },
+
       { id: 'mb1', name: 'Grape', price: 85, category: 'mono black' },
+
       { id: 'mb2', name: 'Strawberry', price: 85, category: 'mono black' },
+
       { id: 'mb3', name: 'Peach', price: 85, category: 'mono black' },
+
       { id: 'mb4', name: 'Lychee', price: 85, category: 'mono black' },
+
       { id: 'ds1', name: 'Cosmo Flower', price: 90, category: 'dark side' },
+
       { id: 'ds2', name: 'Deep Blue Sea', price: 90, category: 'dark side' },
+
       { id: 'ds3', name: 'Falling Star', price: 90, category: 'dark side' },
+
       { id: 'ds4', name: 'Torpedo', price: 90, category: 'dark side' },
+
       { id: 'mh1', name: 'Nord Star', price: 90, category: 'musthave' },
+
       { id: 'mh3', name: 'Space Flavor', price: 90, category: 'musthave' },
+
       { id: 'mh4', name: 'Barberry Candy', price: 90, category: 'musthave' },
+
       { id: 'mh5', name: 'Must Have 60g – Cola', price: 110, category: 'musthave' },
+
       { id: 'mh6', name: 'Must Have 60g – Frosty', price: 110, category: 'musthave' },
+
       { id: 'mx1', name: 'chill%thrill', price: 95, category: 'מיקסים' },
+
       { id: 'mx2', name: 'frooty sunset', price: 95, category: 'מיקסים' },
+
       { id: 'mx3', name: 'skitzberry', price: 95, category: 'מיקסים' },
+
       { id: 'mx4', name: 'tropical charge', price: 95, category: 'מיקסים' },
+
       { id: 'mx5', name: 'peach breeze', price: 95, category: 'מיקסים' },
+
       { id: 'mx6', name: 'berry breeze', price: 95, category: 'מיקסים' }
+
     ];
 
+
+
     let tables = JSON.parse(localStorage.getItem('atmos_tables')) || [];
-    let daily = JSON.parse(localStorage.getItem('atmos_daily')) || { rev:0, orders:0, cash:0, credit:0, flavors:{}, expenses:[], hours:{}, logs:[] };
+
+    let daily = JSON.parse(localStorage.getItem('atmos_daily')) || { rev:0, orders:0, cash:0, credit:0, flavors:{}, log:[], hours:{} };
+
     let archive = JSON.parse(localStorage.getItem('atmos_archive')) || [];
 
+    let currentActiveTab = 'tables';
+
+
+
     function save() {
+
         localStorage.setItem('atmos_tables', JSON.stringify(tables));
+
         localStorage.setItem('atmos_daily', JSON.stringify(daily));
+
         localStorage.setItem('atmos_archive', JSON.stringify(archive));
+
     }
+
+
 
     function init() {
-      const savedStaff = localStorage.getItem('atmos_staff');
-      if(savedStaff) document.getElementById('current-staff-name').textContent = savedStaff;
+
       render();
-      setInterval(() => { updateClock(); tick(); }, 1000);
+
+      setInterval(() => { 
+
+          updateClock(); 
+
+          if(currentActiveTab === 'tables') tick(); 
+
+      }, 1000);
+
     }
+
+
 
     function render() {
-      const grid = document.getElementById('tables-grid');
-      if(grid) {
-          grid.innerHTML = '';
-          tables.forEach(t => {
-            const card = document.createElement('div');
-            const color = t.paid ? 'rgba(30, 41, 59, 0.7)' : `hsla(${t.hue}, 75%, 45%, 0.8)`;
-            card.className = `table-card glass p-6 flex flex-col items-center justify-center text-center cursor-pointer shadow-2xl ${t.paid ? 'opacity-40 grayscale' : ''}`;
-            card.style.backgroundColor = color;
-            card.onclick = () => openTableModal(t.id);
-            
-            card.innerHTML = `
-                <div class="text-3xl font-black mb-1">${t.name}</div>
-                <div class="text-[9px] opacity-60 mb-2 font-bold uppercase tracking-tighter">${t.staff}</div>
-                <div class="text-[11px] font-black bg-black/30 px-4 py-2 rounded-full mb-4 ${getTimerWarning(t)}">${getTimerText(t)}</div>
-                ${!t.paid && t.start ? `
-                    <div class="grid grid-cols-2 gap-2 w-full mt-2">
-                        <button onclick="event.stopPropagation(); skipTimer('${t.id}')" class="ios-btn py-3 rounded-2xl text-[9px] font-black uppercase tracking-tighter">דלג ➔</button>
-                        <button onclick="event.stopPropagation(); openPaymentModal('${t.id}')" class="ios-btn py-3 rounded-2xl text-[9px] font-black uppercase tracking-tighter text-green-400">תשלום 💰</button>
-                    </div>
-                ` : ''}
-                <button onclick="event.stopPropagation(); deleteTable('${t.id}')" class="absolute top-4 left-4 text-white/10 hover:text-white transition-colors">✕</button>
-            `;
-            grid.appendChild(card);
-          });
-      }
+
+      if(currentActiveTab === 'tables') renderTables();
+
       renderStats();
+
       renderArchive();
-      renderExpenses();
+
+      renderInventory();
+
     }
+
+
+
+    function renderTables() {
+
+      const grid = document.getElementById('tables-grid');
+
+      grid.innerHTML = '';
+
+      tables.forEach(t => {
+
+        const color = t.paid ? '#1e293b' : `hsl(${t.hue || 220}, 65%, 45%)`;
+
+        const card = document.createElement('div');
+
+        card.className = `table-card p-8 rounded-[2rem] flex flex-col items-center justify-center text-center cursor-pointer relative shadow-2xl transition-transform active:scale-95 ${t.paid ? 'opacity-40 grayscale-[0.5]' : ''}`;
+
+        card.style.backgroundColor = color;
+
+        card.onclick = () => openTableModal(t.id);
+
+        card.innerHTML = `
+
+            <div class="text-3xl font-black mb-2">${t.name}</div>
+
+            <div class="text-[11px] font-bold bg-black/30 px-4 py-1.5 rounded-full uppercase tracking-wider">${getTimerText(t)}</div>
+
+            <button onclick="event.stopPropagation(); deleteTable('${t.id}')" class="absolute top-4 left-4 text-white/20 hover:text-white transition-colors">✕</button>
+
+        `;
+
+        grid.appendChild(card);
+
+      });
+
+    }
+
+
 
     function getTimerText(t) {
-      if (!t.start || t.paid) return 'READY';
+
+      if (!t.start || t.paid) return 'פנוי';
+
       const s = t.stage || 0;
-      if (s >= STAGES.length) return 'FINISH';
+
+      if (s >= STAGES.length) return '✅ מוכן לתשלום';
+
       const rem = Math.max(0, STAGES[s].d - Math.floor((Date.now() - t.start) / 1000));
-      return `${STAGES[s].n}: ${Math.floor(rem/60)}:${(rem%60).toString().padStart(2, '0')}`;
+
+      const m = Math.floor(rem/60), sec = rem%60;
+
+      return `${STAGES[s].n}: ${m}:${sec < 10 ? '0'+sec : sec}`;
+
     }
 
-    function getTimerWarning(t) {
-        if (!t.start || t.paid) return '';
-        const s = t.stage || 0;
-        if (s >= STAGES.length) return '';
-        const rem = STAGES[s].d - Math.floor((Date.now() - t.start) / 1000);
-        return rem < 60 ? 'timer-warning' : '';
-    }
+
 
     function tick() {
+
       let changed = false;
+
       tables.forEach(t => {
+
         if (t.start && !t.paid) {
+
           const s = t.stage || 0;
+
           if (Math.floor((Date.now() - t.start) / 1000) >= STAGES[s].d && s < STAGES.length) {
+
             t.stage = s + 1; t.start = Date.now();
+
             changed = true;
+
           }
+
         }
+
       });
-      if (changed) save();
-      render();
+
+      if (changed) {
+
+          save();
+
+          renderTables();
+
+      } else {
+
+          // עדכון טקסטואלי בלבד למניעת הבהוב
+
+          document.querySelectorAll('.table-card').forEach((card, idx) => {
+
+              if(tables[idx]) {
+
+                  const timerEl = card.querySelector('div:nth-child(2)');
+
+                  if(timerEl) timerEl.innerHTML = getTimerText(tables[idx]);
+
+              }
+
+          });
+
+      }
+
     }
+
+
 
     function openTableModal(id) {
+
       const t = tables.find(x => x.id === id);
-      if(!t) return;
+
+      if (!t) return;
+
       const total = (t.items || []).reduce((a,b) => a + (b.price * b.qty), 0);
+
       const modal = document.getElementById('modal-content');
-      const cats = ['מועדפים', 'mono', 'dark side', 'musthave', 'מיקסים'];
+
+      const cats = ['מועדפים', 'mono', 'mono black', 'dark side', 'musthave', 'מיקסים'];
+
+
 
       modal.innerHTML = `
+
         <div class="flex justify-between items-center mb-8">
-            <h2 class="text-4xl font-black">${t.name}</h2>
-            <button onclick="closeModal()" class="ios-btn p-3 rounded-full text-gray-500">✕</button>
+
+            <h2 class="text-3xl font-black text-white">${t.name}</h2>
+
+            <button onclick="closeModal()" class="bg-gray-800 p-2 rounded-full text-gray-400">✕</button>
+
         </div>
-        <div class="mb-8">
-            <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Order Status (₪${total})</h3>
-            <div class="space-y-2 max-h-40 overflow-y-auto pr-2 scrollbar-thin text-xs">
-                ${(t.items || []).map(i => `<div class="glass p-4 flex justify-between items-center font-bold"><span>${i.name} <b>x${i.qty}</b></span><button onclick="removeItem('${t.id}','${i.id}')" class="text-red-500">מחק</button></div>`).join('')}
-            </div>
-        </div>
-        <div class="mb-4">
-            <label class="text-[10px] text-gray-500 font-bold tracking-widest">הערות להזמנה:</label>
-            <textarea id="order-notes" placeholder="למשל: נמוך, הרבה קרח..." class="w-full glass bg-transparent rounded-2xl p-4 text-xs h-20 outline-none border-white/5 mt-2" onchange="updateNotes('${t.id}', this.value)">${t.notes || ''}</textarea>
-        </div>
-        <div class="mb-8 h-64 overflow-y-auto pr-2 scrollbar-thin text-right">
-            ${cats.map(c => `
-                <div class="category-label">${c}</div>
-                <div class="grid grid-cols-2 gap-2 mb-4">
-                    ${menuItems.filter(m => m.category === c).map(i => `<button onclick="addItem('${t.id}','${i.id}')" class="ios-btn p-4 rounded-2xl text-right text-xs font-bold">${i.name}</button>`).join('')}
+
+        ${t.start && !t.paid ? `
+
+            <div class="bg-gray-800/50 p-5 rounded-3xl mb-8 flex justify-between items-center border border-gray-700 shadow-inner">
+
+                <div class="font-black text-indigo-400 text-lg">${getTimerText(t)}</div>
+
+                <div class="flex gap-2">
+
+                    <button onclick="skipTimer('${id}')" class="bg-indigo-600/20 text-indigo-400 px-4 py-2 rounded-xl text-[10px] font-black border border-indigo-500/30 tracking-tighter whitespace-nowrap">דלג ➔</button>
+
+                    <button onclick="openPaymentModal('${id}')" class="bg-green-600/20 text-green-400 px-4 py-2 rounded-xl text-[10px] font-black border border-green-500/30 tracking-tighter whitespace-nowrap">תשלום 💰</button>
+
                 </div>
+
+            </div>` : ''}
+
+        <div class="mb-8">
+
+            <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Order Status (₪${total})</h3>
+
+            <div class="max-h-40 overflow-y-auto space-y-2 pr-2 scrollbar-thin">
+
+                ${(t.items || []).length > 0 ? t.items.map(i => `<div class="flex justify-between bg-gray-800 p-3 rounded-2xl border border-gray-700 text-sm"><span>${i.name} <b class="text-indigo-400">x${i.qty}</b></span><button onclick="removeItem('${t.id}','${i.id}')" class="text-red-500 font-bold">מחק</button></div>`).join('') : '<div class="text-gray-600 italic text-xs">אין פריטים</div>'}
+
+            </div>
+
+        </div>
+
+        <div class="mb-6 h-60 overflow-y-auto border-t border-gray-800 pt-4 scrollbar-thin">
+
+            ${cats.map(cat => `
+
+                <div class="category-label">${cat}</div>
+
+                <div class="grid grid-cols-2 gap-2 mb-4">
+
+                    ${menuItems.filter(m => m.category === cat).map(i => `
+
+                        <button onclick="addItem('${t.id}','${i.id}')" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-2xl text-right text-[12px] font-bold border border-gray-700 transition-colors">${i.name}</button>
+
+                    `).join('')}
+
+                </div>
+
             `).join('')}
+
         </div>
+
         <div class="mt-4">
-            ${!t.start && !t.paid ? `<button onclick="startOrder('${t.id}')" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl active:scale-95 shadow-xl transition-all uppercase tracking-widest">הכנסת הזמנה</button>` : 
-            t.paid ? `<button onclick="deleteTable('${t.id}')" class="w-full ios-btn py-5 rounded-3xl font-black text-red-500">מחק מהמסך</button>` :
-            `<button onclick="openPaymentModal('${t.id}')" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl shadow-xl active:scale-95 transition-all">לתשלום (💰)</button>`}
+
+            ${!t.start && !t.paid ? `<button onclick="startOrder('${t.id}')" class="w-full bg-indigo-600 py-5 rounded-[1.5rem] font-black text-xl shadow-xl active:scale-95 transition-all">הכנסת הזמנה</button>` : 
+
+            t.paid ? `<button onclick="deleteTable('${t.id}')" class="w-full bg-red-600/20 text-red-500 py-5 rounded-2xl font-black">מחק מהמסך</button>` :
+
+            `<button onclick="openPaymentModal('${t.id}')" class="w-full bg-green-600 py-5 rounded-[1.5rem] font-black text-xl shadow-xl active:scale-95 transition-all">לתשלום</button>`}
+
         </div>
+
       `;
+
       document.getElementById('modal-container').classList.remove('hidden');
+
     }
+
+
 
     function openPaymentModal(id) {
+
         const t = tables.find(x => x.id === id);
+
         const total = (t.items || []).reduce((a,b) => a + (b.price * b.qty), 0);
+
         const modal = document.getElementById('modal-content');
+
         modal.innerHTML = `
+
             <div class="text-center">
+
                 <div class="text-6xl font-black mb-10 text-indigo-400 tracking-tighter">₪${total}</div>
-                <div class="grid grid-cols-2 gap-4 mb-8 text-right px-4 text-xs">
-                    <div><label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">סכום ששולם:</label><input type="number" id="pay-amt" value="${total}" class="w-full glass bg-transparent rounded-2xl p-4 text-center text-xl font-black border-white/10 outline-none"></div>
-                    <div><label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">טיפ (Tip):</label><input type="number" id="pay-tip" value="0" class="w-full glass bg-transparent rounded-2xl p-4 text-center text-xl font-black border-white/10 text-green-400"></div>
+
+                <div class="mb-8 text-right px-4">
+
+                    <label class="text-[10px] text-gray-500 font-bold mr-2 uppercase">סכום ששולם:</label>
+
+                    <input type="number" id="pay-amt" value="${total}" class="w-full bg-gray-800 border-2 border-gray-700 rounded-3xl p-5 text-center text-3xl font-black outline-none focus:border-indigo-500 mt-2">
+
                 </div>
+
                 <div class="grid grid-cols-2 gap-4 mb-8">
-                    <button onclick="window.payM='cash'; finishPay('${id}')" class="glass p-12 rounded-[2.5rem] font-black text-xl hover:bg-white/5 active:scale-95 transition-all">💵 מזומן</button>
-                    <button onclick="window.payM='credit'; finishPay('${id}')" class="glass p-12 rounded-[2.5rem] font-black text-xl hover:bg-white/5 active:scale-95 transition-all">💳 אשראי</button>
+
+                    <button onclick="finishPay('${id}','cash')" class="bg-gray-800 hover:bg-gray-700 p-8 rounded-[2rem] font-black border-2 border-gray-700 text-xl">💵 מזומן</button>
+
+                    <button onclick="finishPay('${id}','credit')" class="bg-gray-800 hover:bg-gray-700 p-8 rounded-[2rem] font-black border-2 border-gray-700 text-xl">💳 אשראי</button>
+
                 </div>
-                <button onclick="openTableModal('${id}')" class="text-gray-500 font-bold">חזור לעריכה</button>
+
+                <button onclick="openTableModal('${id}')" class="text-gray-600 font-bold hover:text-white">חזור לעריכה</button>
+
             </div>
+
         `;
-        document.getElementById('modal-container').classList.remove('hidden');
+
     }
+
+
 
     function startOrder(id) {
+
         const t = tables.find(x => x.id === id);
+
+        if (!t) return;
+
         t.start = Date.now(); t.stage = 0;
-        const h = new Date().getHours(); daily.hours[h] = (daily.hours[h] || 0) + 1;
+
+        const hour = new Date().getHours();
+
+        daily.hours[hour] = (daily.hours[hour] || 0) + 1;
+
         save(); closeModal(); render();
+
     }
 
-    function finishPay(id) {
+
+
+    function finishPay(id, method) {
+
         const t = tables.find(x => x.id === id);
-        const method = window.payM;
-        const amt = parseFloat(document.getElementById('pay-amt').value) || 0;
-        const tip = parseFloat(document.getElementById('pay-tip').value) || 0;
-        
+
+        const total = (t.items || []).reduce((a,b) => a + (b.price * b.qty), 0);
+
         t.paid = true; t.start = null;
-        daily.rev += amt; daily.orders++;
-        if(method === 'cash') daily.cash += amt; else daily.credit += amt;
-        
-        daily.logs.push({ table: t.name, staff: t.staff, amount: amt, tip, method, items: t.items.map(i=>i.name).join(', '), time: new Date().toLocaleTimeString('he-IL') });
-        t.items.forEach(i => daily.flavors[i.name] = (daily.flavors[i.name] || 0) + i.qty);
-        
+
+        daily.rev += total; daily.orders++;
+
+        if(method === 'cash') daily.cash += total; else daily.credit += total;
+
+        daily.log.push({ t:t.name, m:method, a:total, time: new Date().toLocaleTimeString('he-IL') });
+
+        (t.items || []).forEach(i => daily.flavors[i.name] = (daily.flavors[i.name] || 0) + i.qty);
+
         save(); closeModal(); render();
+
     }
+
+
 
     function closeShift() {
-        if(!confirm("סגור משמרת? הנתונים יועברו לארכיון.")) return;
-        const peak = Object.entries(daily.hours).sort((a,b)=>b[1]-a[1])[0];
-        const totalExp = daily.expenses.reduce((a,b)=>a+b.amt, 0);
-        archive.push({ date: new Date().toLocaleDateString('he-IL'), id: Date.now(), daily: JSON.parse(JSON.stringify(daily)), peak: peak ? peak[0]+':00' : '--', total_exp: totalExp });
+
+        if(!confirm("סגירת משמרת? הנתונים יעברו לארכיון והמסך יתאפס.")) return;
+
+        archive.push({ 
+
+            date: new Date().toLocaleDateString('he-IL'), 
+
+            time: new Date().toLocaleTimeString('he-IL'),
+
+            id: Date.now(),
+
+            daily: JSON.parse(JSON.stringify(daily)), 
+
+            tables: tables.filter(t=>t.paid) 
+
+        });
+
         tables = [];
-        daily = { rev:0, orders:0, cash:0, credit:0, flavors:{}, expenses:[], hours:{}, logs:[] };
-        save(); location.reload();
+
+        daily = { rev:0, orders:0, cash:0, credit:0, flavors:{}, log:[], hours:{} };
+
+        save();
+
+        location.reload();
+
     }
 
-    function addExpense() {
-        const d = document.getElementById('exp-desc').value, a = parseFloat(document.getElementById('exp-amt').value);
-        if(d && a) { daily.expenses.push({ desc: d, amt: a }); save(); render(); document.getElementById('exp-desc').value=''; document.getElementById('exp-amt').value=''; }
-    }
 
-    function renderExpenses() {
-        const list = document.getElementById('expenses-list');
-        if(list) list.innerHTML = daily.expenses.map(e => `<div class="flex justify-between glass p-4 text-sm font-bold border-white/5"><span>${e.desc}</span><span class="text-red-400">₪${e.amt}</span></div>`).join('');
-    }
-
-    function renderStats() {
-        const grid = document.getElementById('analytics-grid');
-        if(!grid) return;
-        const peak = Object.entries(daily.hours).sort((a,b)=>b[1]-a[1])[0];
-        const exp = daily.expenses.reduce((a,b)=>a+b.amt, 0);
-        grid.innerHTML = `
-            <div class="glass p-8"><h3 class="text-indigo-400 font-black mb-4 uppercase text-[9px] tracking-widest">🏆 טעמים מובילים</h3>
-                ${Object.entries(daily.flavors).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,q])=>`<div class="flex justify-between text-sm py-2 border-b border-white/5"><span>${n}</span><b>${q}</b></div>`).join('')}
-            </div>
-            <div class="glass p-8 text-center"><h3 class="text-indigo-400 font-black mb-4 uppercase text-[9px] tracking-widest">⏰ שעת שיא</h3><div class="text-4xl font-black py-4 tracking-tighter">${peak ? peak[0]+':00' : '--'}</div></div>
-            <div class="glass p-8 md:col-span-2 flex justify-around"><div class="text-center"><h3 class="text-gray-500 font-bold text-[9px] uppercase mb-1">הכנסות</h3><b class="text-green-400 text-4xl font-black italic">₪${daily.rev}</b></div>
-                <div class="text-center"><h3 class="text-gray-500 font-bold text-[9px] uppercase mb-1">הוצאות</h3><b class="text-red-400 text-3xl font-black italic">₪${exp}</b></div>
-            </div>
-        `;
-    }
-
-    function renderArchive() {
-        const list = document.getElementById('archive-list');
-        if(!list) return;
-        list.innerHTML = archive.slice().reverse().map(s => `
-            <div class="glass overflow-hidden mb-4 shadow-xl">
-                <div class="p-6 flex justify-between items-center cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
-                    <span class="font-black text-indigo-300 text-xl">${s.date}</span>
-                    <div class="flex items-center gap-6"><span class="text-2xl font-black text-green-400">₪${s.daily.rev}</span><button onclick="event.stopPropagation(); deleteArchive('${s.id}')" class="text-red-900/50 hover:text-red-500 transition-colors">✕</button></div>
-                </div>
-                <div class="hidden p-8 border-t border-white/5 space-y-8 bg-white/5">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-black">
-                        <div class="glass p-5 border-white/5">הזמנות: ${s.daily.orders}</div>
-                        <div class="glass p-5 border-white/5 text-green-400 text-[9px]">מזומן: ₪${s.daily.cash}<br>אשראי: ₪${s.daily.credit}</div>
-                        <div class="glass p-5 border-white/5 text-red-400">הוצאות: ₪${s.total_exp}</div>
-                        <div class="glass p-5 border-white/5">שיא: ${s.peak}</div>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="text-[9px] text-gray-500 font-black uppercase mb-3 tracking-widest">פירוט עסקאות:</div>
-                        ${s.daily.logs.map(l => `<div class="glass bg-white/5 p-4 text-[11px] flex justify-between border-white/5"><span><b>${l.table}</b> (${l.staff}): ${l.items}</span><span>₪${l.amount} ${l.method==='cash'?'💵':'💳'} + ₪${l.tip} Tip</span></div>`).join('')}
-                    </div>
-                    <button onclick="sendWhatsapp('${s.id}')" class="w-full bg-green-500/20 text-green-400 py-4 rounded-2xl font-black text-xs border border-green-500/30 uppercase tracking-widest">Share Shift Summary ✅</button>
-                </div>
-            </div>`).join('');
-    }
 
     function openAddTableModal() {
+
         const modal = document.getElementById('modal-content');
-        modal.innerHTML = `<div class="text-center"><h2 class="text-2xl font-black mb-8 uppercase tracking-widest">Open Table</h2><input type="text" id="new-name" placeholder="שם/מספר" class="w-full glass bg-transparent rounded-3xl p-6 text-center text-4xl font-black outline-none border border-white/10 mb-8 focus:border-white"><button onclick="addTable()" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl shadow-xl active:scale-95 transition-all">צור שולחן</button></div>`;
+
+        modal.innerHTML = `
+
+            <div class="text-center">
+
+                <h2 class="text-2xl font-black mb-8 uppercase tracking-tighter">פתח שולחן</h2>
+
+                <input type="text" id="new-name" placeholder="שם/מספר" class="w-full bg-gray-800 border-2 border-gray-700 rounded-3xl p-6 text-center text-3xl font-black mb-8 outline-none focus:border-indigo-500">
+
+                <button onclick="addTable()" class="w-full bg-indigo-600 py-5 rounded-[1.5rem] font-black text-xl active:scale-95 transition-all">אישור</button>
+
+            </div>
+
+        `;
+
         document.getElementById('modal-container').classList.remove('hidden');
+
+        document.getElementById('new-name').focus();
+
     }
+
+
 
     function addTable() {
+
         const n = document.getElementById('new-name').value;
+
         if(!n) return;
-        const id = 't'+Date.now();
-        tables.push({ id, name:n, hue:Math.floor(Math.random()*360), items:[], paid:false, stage:0, start:null, staff:document.getElementById('current-staff-name').textContent });
-        save(); openTableModal(id);
+
+        const id = 't' + Date.now();
+
+        tables.push({ id, name: n, hue: Math.floor(Math.random()*360), items: [], paid: false, stage: 0, start: null });
+
+        save(); 
+
+        openTableModal(id);
+
     }
 
-    function deleteArchive(id) { if(confirm("למחוק לצמיתות?")) { archive = archive.filter(x => x.id != id); save(); render(); } }
-    function skipTimer(id) { const t = tables.find(x=>x.id===id); t.stage++; t.start=Date.now(); save(); render(); }
-    function addItem(tid, mid) { const t=tables.find(x=>x.id===tid), m=menuItems.find(x=>x.id===mid); const ex=t.items.find(x=>x.id===mid); if(ex) ex.qty++; else t.items.push({...m,qty:1}); save(); openTableModal(tid); }
-    function removeItem(tid, mid) { const t=tables.find(x=>x.id===tid); t.items=t.items.filter(x=>x.id!==mid); save(); openTableModal(tid); }
-    function updateNotes(id, val) { const t=tables.find(x=>x.id===id); t.notes=val; save(); }
-    function deleteTable(id) { if(confirm("למחוק?")) { tables=tables.filter(x=>x.id!==id); save(); render(); } }
-    function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
-    function switchTab(id) { document.querySelectorAll('.view-content').forEach(v=>v.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('tab-active','text-white')); document.getElementById('tab-'+id).classList.add('tab-active'); }
-    function changeUser() { const u=prompt("שם עובד:"); if(u) { document.getElementById('current-staff-name').textContent=u; localStorage.setItem('atmos_staff',u); } }
-    function updateClock() { const now=new Date(); document.getElementById('date-time-display').innerHTML = `${now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})} | ${now.toLocaleDateString('he-IL')}`; }
-    function sendWhatsapp(id) { 
-        const s = archive.find(x => x.id == id);
-        const text = encodeURIComponent(`סיכום ATMOS (${s.date}):\nסה"כ הכנסות: ₪${s.daily.rev}\nמזומן: ₪${s.daily.cash} | אשראי: ₪${s.daily.credit}\nהוצאות: ₪${s.total_exp}\nשעת שיא: ${s.peak}`);
-        window.open(`https://wa.me/?text=${text}`);
+
+
+    function renderStats() {
+
+        const grid = document.getElementById('analytics-grid');
+
+        if(!grid) return;
+
+        const peakHour = Object.entries(daily.hours).sort((a,b)=>b[1]-a[1])[0];
+
+        grid.innerHTML = `
+
+            <div class="bg-gray-800 p-8 rounded-[2.5rem] border border-gray-700">
+
+                <h3 class="text-indigo-400 font-black mb-6 uppercase tracking-widest text-xs">🏆 טעמים מובילים</h3>
+
+                ${Object.entries(daily.flavors).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,q])=>`<div class="flex justify-between text-sm py-2 border-b border-gray-700/50"><span>${n}</span><b class="text-indigo-400">${q}</b></div>`).join('')}
+
+            </div>
+
+            <div class="bg-gray-800 p-8 rounded-[2.5rem] border border-gray-700">
+
+                <h3 class="text-indigo-400 font-black mb-6 uppercase tracking-widest text-xs">⏰ שעות שיא</h3>
+
+                <div class="text-3xl font-black text-center py-4">${peakHour ? peakHour[0] + ':00' : '--:--'}<div class="text-[10px] text-gray-500 mt-1 uppercase font-bold">${peakHour ? peakHour[1] + ' הזמנות' : 'אין נתונים'}</div></div>
+
+            </div>
+
+            <div class="bg-gray-800 p-8 rounded-[2.5rem] border border-gray-700 md:col-span-2">
+
+                <h3 class="text-indigo-400 font-black mb-6 uppercase tracking-widest text-xs">💰 פירוט הכנסות</h3>
+
+                <div class="flex justify-around mb-6 bg-gray-900 p-4 rounded-2xl">
+
+                    <div><div class="text-[10px] text-gray-500 font-bold">מזומן</div><b class="text-green-400 text-lg">₪${daily.cash}</b></div>
+
+                    <div><div class="text-[10px] text-gray-500 font-bold">אשראי</div><b class="text-blue-400 text-lg">₪${daily.credit}</b></div>
+
+                </div>
+
+            </div>
+
+        `;
+
     }
+
+
+
+    function renderArchive() {
+
+        const list = document.getElementById('archive-list');
+
+        if(!list) return;
+
+        list.innerHTML = archive.slice().reverse().map(s => {
+
+            const peak = Object.entries(s.daily.hours || {}).sort((a,b)=>b[1]-a[1])[0];
+
+            return `
+
+            <div class="bg-gray-800 rounded-[2rem] border border-gray-700 overflow-hidden shadow-lg">
+
+                <div class="bg-gray-900 px-6 py-4 flex justify-between items-center cursor-pointer" onclick="toggleArchiveDetail(event, '${s.id}')">
+
+                    <span class="font-black text-indigo-300 ml-3">${s.date}</span>
+
+                    <div class="flex items-center gap-4">
+
+                        <span class="text-xl font-black text-green-400 tracking-tighter">₪${s.daily.rev}</span>
+
+                        <button onclick="event.stopPropagation(); deleteArchive('${s.id}')" class="text-red-900 hover:text-red-500">✕</button>
+
+                    </div>
+
+                </div>
+
+                <div id="detail-${s.id}" class="hidden p-6 border-t border-gray-800 grid grid-cols-2 md:grid-cols-4 gap-4 text-[10px]">
+
+                    <div><b class="block text-indigo-400 mb-1 uppercase tracking-widest text-[9px]">תשלום:</b> מזומן: ₪${s.daily.cash}<br>אשראי: ₪${s.daily.credit}</div>
+
+                    <div><b class="block text-indigo-400 mb-1 uppercase tracking-widest text-[9px]">שעת שיא:</b> ${peak ? peak[0]+':00 ('+peak[1]+')' : '--'}</div>
+
+                    <div class="col-span-2"><b class="block text-indigo-400 mb-1 uppercase tracking-widest text-[9px]">נמכרו:</b> ${Object.entries(s.daily.flavors || {}).map(f => f[0] + ' ('+f[1]+')').join(', ')}</div>
+
+                </div>
+
+            </div>`}).join('');
+
+    }
+
+
+
+    function toggleArchiveDetail(event, id) {
+
+        event.preventDefault();
+
+        const el = document.getElementById('detail-' + id);
+
+        if(el) {
+
+            const isHidden = el.classList.contains('hidden');
+
+            // סגירת כל שאר הלשוניות (אופציונלי)
+
+            document.querySelectorAll('[id^="detail-"]').forEach(d => d.classList.add('hidden'));
+
+            if(isHidden) el.classList.remove('hidden');
+
+        }
+
+    }
+
+
+
+    function deleteArchive(id) { if(confirm("מחיקת סיכום משמרת מהארכיון?")) { archive = archive.filter(x => x.id != id); save(); renderArchive(); } }
+
+    function skipTimer(id) { const t = tables.find(x => x.id === id); if(t) { t.stage++; t.start = Date.now(); save(); openTableModal(id); } }
+
+    function addItem(tid, mid) { 
+
+        const t = tables.find(x => x.id === tid), m = menuItems.find(x => x.id === mid);
+
+        if(!t) return;
+
+        const ex = t.items.find(x => x.id === mid);
+
+        if(ex) ex.qty++; else t.items.push({...m, qty:1});
+
+        save(); openTableModal(tid);
+
+    }
+
+    function removeItem(tid, mid) { const t = tables.find(x => x.id === tid); if(t) { t.items = t.items.filter(x => x.id !== mid); save(); openTableModal(tid); } }
+
+    function deleteTable(id) { if(confirm("למחוק שולחן?")) { tables = tables.filter(x => x.id !== id); save(); renderTables(); } }
+
+    function switchTab(id) {
+
+        currentActiveTab = id;
+
+        document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
+
+        document.getElementById('view-'+id).classList.remove('hidden');
+
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active', 'text-white'));
+
+        document.getElementById('tab-'+id).classList.add('tab-active');
+
+        render();
+
+    }
+
+    function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
+
+    function updateClock() { 
+
+        const now = new Date(); 
+
+        const dateStr = now.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+        document.getElementById('date-time-display').innerHTML = `${now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}<br>${dateStr}`; 
+
+    }
+
+    function changeUser() { const u = prompt("שם עובד:"); if(u) { document.getElementById('current-staff-name').textContent = u; localStorage.setItem('atmos_staff', u); } }
+
+    function renderInventory() { 
+
+        const grid = document.getElementById('inventory-grid');
+
+        if(grid) grid.innerHTML = menuItems.map(i => `<div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex justify-between items-center"><div class="text-[11px] font-bold text-gray-300">${i.name}</div><div class="text-[9px] text-indigo-500 font-bold uppercase">${i.category}</div></div>`).join(''); 
+
+    }
+
+
+
+    const savedStaff = localStorage.getItem('atmos_staff');
+
+    if(savedStaff) document.getElementById('current-staff-name').textContent = savedStaff;
+
+
 
     init();
+
   </script>
+
  </body>
+
 </html>
