@@ -37,10 +37,12 @@
 
    <nav class="glass p-1.5 flex gap-1">
      <button onclick="switchTab('tables')" id="tab-tables" class="tab-btn tab-active flex-1 py-2.5 rounded-[18px] text-xs font-bold transition-all">שולחנות</button>
+     <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn flex-1 py-2.5 rounded-[18px] text-xs font-bold text-gray-400">אנליטיקס 📊</button>
      <button class="flex-1 py-2.5 rounded-[18px] text-xs font-bold text-gray-400 opacity-50" disabled>ארכיון (בשלב הבא)</button>
    </nav>
 
    <main class="flex-1 overflow-y-auto scrollbar-thin rounded-[32px]">
+    
     <div id="view-tables" class="view-content flex flex-col h-full">
         <div class="flex justify-between items-center mb-4 px-2">
             <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Active Tables</h2>
@@ -61,6 +63,48 @@
             <button onclick="closeShift()" class="ios-btn px-16 py-5 rounded-[28px] font-black text-lg text-red-400 border-red-500/20 shadow-2xl active:scale-95 transition-all">🏁 סגירת משמרת</button>
         </div>
     </div>
+
+    <div id="view-analytics" class="view-content hidden p-2 space-y-4">
+        <h2 class="text-xl font-black text-white mb-4 px-2">ניתוח נתונים משמרת</h2>
+        
+        <div class="glass p-6">
+            <button onclick="this.nextElementSibling.classList.toggle('hidden')" class="w-full flex justify-between items-center font-bold text-indigo-300">
+                <span>שעות שיא ⏰</span>
+                <span class="text-xs opacity-50">לחץ לפירוט</span>
+            </button>
+            <div id="peak-hours-content" class="hidden mt-6 space-y-3">
+                </div>
+        </div>
+
+        <div class="glass p-6">
+            <button onclick="this.nextElementSibling.classList.toggle('hidden')" class="w-full flex justify-between items-center font-bold text-indigo-300">
+                <span>טעמים מובילים 🏆</span>
+                <span class="text-xs opacity-50">לחץ לפירוט</span>
+            </button>
+            <div id="top-flavors-content" class="hidden mt-6 space-y-2">
+                </div>
+        </div>
+
+        <div class="glass p-6">
+            <button onclick="this.nextElementSibling.classList.toggle('hidden')" class="w-full flex justify-between items-center font-bold text-indigo-300">
+                <span>נתוני תשלום 💳</span>
+                <span class="text-xs opacity-50">לחץ לפירוט</span>
+            </button>
+            <div id="payment-stats-content" class="hidden mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
+                    <div class="text-[10px] text-gray-500 uppercase font-bold mb-1">אשראי (Credit)</div>
+                    <div id="stat-credit-sum" class="text-2xl font-black text-blue-400">₪0</div>
+                    <div id="stat-credit-count" class="text-[10px] text-gray-400 mt-1">0 הזמנות</div>
+                </div>
+                <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
+                    <div class="text-[10px] text-gray-500 uppercase font-bold mb-1">מזומן (Cash)</div>
+                    <div id="stat-cash-sum" class="text-2xl font-black text-green-400">₪0</div>
+                    <div id="stat-cash-count" class="text-[10px] text-gray-400 mt-1">0 הזמנות</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
    </main>
   </div>
 
@@ -71,48 +115,26 @@
   <script>
     const STAGES = [{n:'הכנה', d:15*60}, {n:'גחלים 1', d:30*60}, {n:'גחלים 2', d:30*60}];
     
-    // רשימת טעמים מלאה
     const menuItems = [
       { id: 'mx1', name: 'chill%thrill', price: 95, category: 'מיקסים' },
       { id: 'mx2', name: 'frooty sunset', price: 95, category: 'מיקסים' },
-      { id: 'mx3', name: 'skitzberry', price: 95, category: 'מיקסים' },
-      { id: 'mx4', name: 'tropical charge', price: 95, category: 'מיקסים' },
-      { id: 'mx5', name: 'peach breeze', price: 95, category: 'מיקסים' },
-      { id: 'mx6', name: 'berry breeze', price: 95, category: 'מיקסים' },
       { id: 'f1', name: 'Pinkman', price: 85, category: 'מועדפים' },
       { id: 'f2', name: 'Lemon Mint', price: 80, category: 'מועדפים' },
-      { id: 'f3', name: 'Ice Blueberry Mint', price: 80, category: 'מועדפים' },
       { id: 'm1', name: 'Purple Skitlzz', price: 80, category: 'mono' },
       { id: 'm2', name: 'Tik Tak', price: 80, category: 'mono' },
-      { id: 'm3', name: 'Peach Apricot', price: 80, category: 'mono' },
-      { id: 'm4', name: 'Lychee Orange Strawberry', price: 80, category: 'mono' },
-      { id: 'm5', name: 'Jumango', price: 80, category: 'mono' },
-      { id: 'm6', name: 'Sour Sweet Raspberry', price: 80, category: 'mono' },
-      { id: 'm7', name: 'Ice Sweet Mango', price: 80, category: 'mono' },
-      { id: 'm8', name: 'Berries', price: 80, category: 'mono' },
-      { id: 'm9', name: 'Ice', price: 80, category: 'mono' },
-      { id: 'm10', name: 'Guava Energy Drink', price: 80, category: 'mono' },
-      { id: 'm11', name: 'Island Mix', price: 80, category: 'mono' },
-      { id: 'm12', name: 'Mono Mix', price: 80, category: 'mono' },
       { id: 'mb1', name: 'Grape', price: 85, category: 'mono black' },
-      { id: 'mb2', name: 'Strawberry', price: 85, category: 'mono black' },
-      { id: 'mb3', name: 'Peach', price: 85, category: 'mono black' },
-      { id: 'mb4', name: 'Lychee', price: 85, category: 'mono black' },
       { id: 'ds1', name: 'Cosmo Flower', price: 90, category: 'dark side' },
-      { id: 'ds2', name: 'Deep Blue Sea', price: 90, category: 'dark side' },
-      { id: 'ds3', name: 'Falling Star', price: 90, category: 'dark side' },
-      { id: 'ds4', name: 'Torpedo', price: 90, category: 'dark side' },
-      { id: 'mh1', name: 'Nord Star', price: 90, category: 'musthave' },
-      { id: 'mh3', name: 'Space Flavor', price: 90, category: 'musthave' },
-      { id: 'mh4', name: 'Barberry Candy', price: 90, category: 'musthave' },
-      { id: 'mh5', name: 'Must Have 60g – Cola', price: 110, category: 'musthave' },
-      { id: 'mh6', name: 'Must Have 60g – Frosty', price: 110, category: 'musthave' }
+      { id: 'mh1', name: 'Nord Star', price: 90, category: 'musthave' }
     ];
 
     let tables = JSON.parse(localStorage.getItem('atmos_tables')) || [];
+    let daily = JSON.parse(localStorage.getItem('atmos_daily')) || { rev:0, orders:0, cash:0, credit:0, cashCount:0, creditCount:0, flavors:{}, hours:{} };
     let archive = JSON.parse(localStorage.getItem('atmos_archive')) || [];
 
-    function save() { localStorage.setItem('atmos_tables', JSON.stringify(tables)); }
+    function save() { 
+        localStorage.setItem('atmos_tables', JSON.stringify(tables)); 
+        localStorage.setItem('atmos_daily', JSON.stringify(daily));
+    }
 
     function init() {
       render();
@@ -126,8 +148,8 @@
       const closedGrid = document.getElementById('closed-grid');
       const closedSection = document.getElementById('closed-section');
       
-      activeGrid.innerHTML = '';
-      closedGrid.innerHTML = '';
+      if(activeGrid) activeGrid.innerHTML = '';
+      if(closedGrid) closedGrid.innerHTML = '';
       let closedCount = 0;
 
       tables.forEach(t => {
@@ -150,143 +172,119 @@
             <button onclick="event.stopPropagation(); deleteTable('${t.id}')" class="absolute top-3 left-3 text-white/10 hover:text-white transition-colors p-1">✕</button>
         `;
 
-        if (t.paid) { closedGrid.appendChild(card); closedCount++; }
-        else { activeGrid.appendChild(card); }
+        if (t.paid) { if(closedGrid) closedGrid.appendChild(card); closedCount++; }
+        else { if(activeGrid) activeGrid.appendChild(card); }
       });
-      closedSection.style.display = closedCount > 0 ? 'block' : 'none';
+
+      if(closedSection) closedSection.style.display = closedCount > 0 ? 'block' : 'none';
+      updateAnalyticsUI();
     }
 
-    function getTimerText(t) {
-      if (t.paid) return 'שולם';
-      if (!t.start) return 'פנוי';
-      const s = t.stage || 0;
-      if (s >= STAGES.length) return 'סיום';
-      const rem = Math.max(0, STAGES[s].d - Math.floor((Date.now() - t.start) / 1000));
-      return `${STAGES[s].n}: ${Math.floor(rem/60)}:${(rem%60).toString().padStart(2, '0')}`;
-    }
-
-    function getTimerWarning(t) {
-        if (!t.start || t.paid) return '';
-        const s = t.stage || 0;
-        if (s >= STAGES.length) return '';
-        const rem = STAGES[s].d - Math.floor((Date.now() - t.start) / 1000);
-        return rem < 60 ? 'timer-warning' : '';
-    }
-
-    function tick() {
-      let changed = false;
-      tables.forEach(t => {
-        if (t.start && !t.paid) {
-          const s = t.stage || 0;
-          if (Math.floor((Date.now() - t.start) / 1000) >= STAGES[s].d && s < STAGES.length) {
-            t.stage = s + 1; t.start = Date.now();
-            changed = true;
-          }
+    function updateAnalyticsUI() {
+        // שעות שיא
+        const hourDiv = document.getElementById('peak-hours-content');
+        if(hourDiv) {
+            const sortedHours = Object.entries(daily.hours).sort((a,b) => b[1] - a[1]);
+            hourDiv.innerHTML = sortedHours.length ? sortedHours.map(([hour, count]) => `
+                <div class="flex items-center gap-4">
+                    <span class="text-xs font-bold w-12">${hour}:00</span>
+                    <div class="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                        <div class="h-full bg-indigo-500" style="width: ${Math.min(100, count*10)}%"></div>
+                    </div>
+                    <span class="text-[10px] text-gray-500">${count} הזמנות</span>
+                </div>
+            `).join('') : '<div class="text-center text-xs text-gray-600 italic">אין נתוני שעות עדיין</div>';
         }
-      });
-      if (changed) save();
-      render();
-    }
 
-    function openTableModal(id) {
-      const t = tables.find(x => x.id === id);
-      if(!t) return;
-      const total = (t.items || []).reduce((a,b) => a + (b.price * b.qty), 0);
-      const modal = document.getElementById('modal-content');
-      const cats = ['מיקסים', 'מועדפים', 'mono', 'mono black', 'dark side', 'musthave'];
-
-      modal.innerHTML = `
-        <div class="flex justify-between items-center mb-8">
-            <h2 class="text-4xl font-black text-white">${t.name}</h2>
-            <button onclick="closeModal()" class="ios-btn p-3 rounded-full text-gray-400">✕</button>
-        </div>
-        <div class="mb-8">
-            <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Order Status (₪${total})</h3>
-            <div class="space-y-2 max-h-32 overflow-y-auto pr-2 scrollbar-thin text-xs">
-                ${(t.items || []).map(i => `<div class="glass p-4 flex justify-between items-center"><span>${i.name} <b>x${i.qty}</b></span><button onclick="removeItem('${t.id}','${i.id}')" class="text-red-500 font-bold uppercase text-[9px]">מחק</button></div>`).join('')}
-            </div>
-        </div>
-        <div class="mb-4 text-right">
-            <label class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">הערות הזמנה:</label>
-            <textarea class="w-full glass bg-transparent rounded-2xl p-4 text-xs h-20 outline-none border-white/5 mt-2" onchange="updateNotes('${t.id}', this.value)" placeholder="הערות מיוחדות...">${t.notes || ''}</textarea>
-        </div>
-        <div class="mb-8 h-60 overflow-y-auto border-t border-white/5 pt-4 scrollbar-thin text-right text-xs">
-            ${cats.map(c => `
-                <div class="category-label">${c}</div>
-                <div class="grid grid-cols-2 gap-2 mb-4">
-                    ${menuItems.filter(m => m.category === c).map(i => `<button onclick="addItem('${t.id}','${i.id}')" class="ios-btn p-4 rounded-2xl text-right font-bold">${i.name}</button>`).join('')}
+        // טעמים מובילים
+        const flavorDiv = document.getElementById('top-flavors-content');
+        if(flavorDiv) {
+            const sortedFlavors = Object.entries(daily.flavors).sort((a,b) => b[1] - a[1]);
+            flavorDiv.innerHTML = sortedFlavors.length ? sortedFlavors.slice(0, 5).map(([name, count]) => `
+                <div class="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                    <span class="text-xs font-bold">${name}</span>
+                    <span class="text-indigo-400 font-black">${count} יח'</span>
                 </div>
-            `).join('')}
-        </div>
-        <div class="mt-4 grid grid-cols-1 gap-2">
-            ${!t.start ? `<button onclick="startOrder('${t.id}')" class="w-full bg-white text-black py-5 rounded-[2rem] font-black text-xl shadow-xl active:scale-95 transition-all">הכנסת הזמנה</button>` : 
-            `<button onclick="openPaymentModal('${t.id}')" class="w-full bg-white text-black py-5 rounded-[2rem] font-black text-xl shadow-xl">לתשלום</button>`}
-        </div>
-      `;
-      document.getElementById('modal-container').classList.remove('hidden');
+            `).join('') : '<div class="text-center text-xs text-gray-600 italic">אין נתוני טעמים עדיין</div>';
+        }
+
+        // נתוני תשלום
+        const statCashSum = document.getElementById('stat-cash-sum');
+        if(statCashSum) statCashSum.innerText = `₪${daily.cash}`;
+        const statCashCount = document.getElementById('stat-cash-count');
+        if(statCashCount) statCashCount.innerText = `${daily.cashCount} הזמנות`;
+        
+        const statCreditSum = document.getElementById('stat-credit-sum');
+        if(statCreditSum) statCreditSum.innerText = `₪${daily.credit}`;
+        const statCreditCount = document.getElementById('stat-credit-count');
+        if(statCreditCount) statCreditCount.innerText = `${daily.creditCount} הזמנות`;
     }
 
-    function openPaymentModal(id) {
+    function finishPay(id) {
         const t = tables.find(x => x.id === id);
-        const total = (t.items || []).reduce((a,b) => a + (b.price * b.qty), 0);
-        const modal = document.getElementById('modal-content');
-        modal.innerHTML = `
-            <div class="text-center">
-                <div class="text-[10px] text-gray-500 font-black tracking-widest mb-2 uppercase">Amount to Settle</div>
-                <div class="text-6xl font-black mb-10 text-indigo-400 tracking-tighter">₪${total}</div>
-                
-                <div class="grid grid-cols-2 gap-4 mb-8 text-right px-4">
-                    <div>
-                        <label class="text-[10px] text-gray-500 font-bold mr-2 uppercase tracking-widest">סכום:</label>
-                        <input type="number" id="pay-amt" value="${total}" class="w-full glass bg-transparent rounded-3xl p-5 text-center text-3xl font-black outline-none border-white/10 focus:border-white">
-                    </div>
-                    <div>
-                        <label class="text-[10px] text-gray-500 font-bold mr-2 uppercase tracking-widest text-green-400">טיפ (TIP):</label>
-                        <input type="number" id="pay-tip" value="0" class="w-full glass bg-transparent rounded-3xl p-5 text-center text-3xl font-black outline-none border-white/10 focus:border-green-500 text-green-400">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 mb-8">
-                    <button onclick="finishPay('${id}','cash')" class="glass p-10 rounded-[2.5rem] font-black text-xl hover:bg-white/5 transition-all">💵 מזומן</button>
-                    <button onclick="finishPay('${id}','credit')" class="glass p-10 rounded-[2.5rem] font-black text-xl hover:bg-white/5 transition-all">💳 אשראי</button>
-                </div>
-                <button onclick="openTableModal('${id}')" class="text-gray-600 font-bold hover:text-white underline">חזור להזמנה</button>
-            </div>
-        `;
-        document.getElementById('modal-container').classList.remove('hidden');
-    }
-
-    function finishPay(id, method) {
-        const t = tables.find(x => x.id === id);
+        const method = window.payM;
         const amt = parseFloat(document.getElementById('pay-amt').value);
         const tip = parseFloat(document.getElementById('pay-tip').value);
+        
         t.paid = true;
-        t.payment_method = method;
-        t.final_amount = amt;
-        t.tip_amount = tip;
         t.timer_start_time = null;
+
+        // עדכון אנליטיקס
+        daily.rev += amt;
+        daily.orders++;
+        if(method === 'cash') {
+            daily.cash += amt;
+            daily.cashCount++;
+        } else {
+            daily.credit += amt;
+            daily.creditCount++;
+        }
+
+        // עדכון טעמים
+        t.items.forEach(item => {
+            daily.flavors[item.name] = (daily.flavors[item.name] || 0) + item.qty;
+        });
+
         save(); closeModal(); render();
     }
 
-    function closeShift() {
-        if(!confirm("סגירת משמרת? הנתונים יעברו לארכיון.")) return;
-        archive.push({ id: Date.now(), date: new Date().toLocaleDateString('he-IL'), tables: tables.filter(t => t.paid) });
-        tables = []; save(); localStorage.setItem('atmos_archive', JSON.stringify(archive));
-        location.reload();
+    function startOrder(id) {
+        const t = tables.find(x => x.id === id);
+        if (!t) return;
+        t.start = Date.now(); t.stage = 0;
+        
+        // תיעוד שעת ההזמנה לאנליטיקס
+        const hour = new Date().getHours();
+        daily.hours[hour] = (daily.hours[hour] || 0) + 1;
+        
+        save(); closeModal(); render();
     }
 
-    function startOrder(id) { const t = tables.find(x => x.id === id); t.start = Date.now(); t.stage = 0; save(); closeModal(); render(); }
+    function switchTab(id) {
+        document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
+        document.getElementById('view-'+id).classList.remove('hidden');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active', 'text-white'));
+        document.getElementById('tab-'+id).classList.add('tab-active');
+        render();
+    }
+
+    // --- שאר הפונקציות מהשלב הקודם ללא שינוי ---
+    function getTimerText(t) { if (t.paid) return 'שולם'; if (!t.start) return 'פנוי'; const s = t.stage || 0; if (s >= STAGES.length) return 'סיום'; const rem = Math.max(0, STAGES[s].d - Math.floor((Date.now() - t.start) / 1000)); return `${STAGES[s].n}: ${Math.floor(rem/60)}:${(rem%60).toString().padStart(2, '0')}`; }
+    function getTimerWarning(t) { if (!t.start || t.paid) return ''; const s = t.stage || 0; if (s >= STAGES.length) return ''; const rem = STAGES[s].d - Math.floor((Date.now() - t.start) / 1000); return rem < 60 ? 'timer-warning' : ''; }
+    function tick() { let changed = false; tables.forEach(t => { if (t.start && !t.paid) { const s = t.stage || 0; if (Math.floor((Date.now() - t.start) / 1000) >= STAGES[s].d && s < STAGES.length) { t.stage = s + 1; t.start = Date.now(); changed = true; } } }); if (changed) save(); render(); }
+    function openTableModal(id) { const t = tables.find(x => x.id === id); if(!t) return; const total = (t.items || []).reduce((a,b) => a + (b.price * b.qty), 0); const modal = document.getElementById('modal-content'); const cats = ['מיקסים', 'מועדפים', 'mono', 'dark side', 'musthave']; modal.innerHTML = `<div class="flex justify-between items-center mb-8"><h2 class="text-4xl font-black text-white">${t.name}</h2><button onclick="closeModal()" class="ios-btn p-3 rounded-full text-gray-400">✕</button></div><div class="mb-8"><h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Order Status (₪${total})</h3><div class="space-y-2 max-h-32 overflow-y-auto pr-2 scrollbar-thin text-xs">${(t.items || []).map(i => `<div class="glass p-4 flex justify-between items-center font-bold"><span>${i.name} <b>x${i.qty}</b></span><button onclick="removeItem('${t.id}','${i.id}')" class="text-red-500 font-bold uppercase text-[9px]">מחק</button></div>`).join('')}</div></div><div class="mb-4 text-right"><label class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">הערות:</label><textarea class="w-full glass bg-transparent rounded-2xl p-4 text-xs h-20 outline-none border-white/5 mt-2" onchange="updateNotes('${t.id}', this.value)" placeholder="הערות...">${t.notes || ''}</textarea></div><div class="mb-8 h-60 overflow-y-auto border-t border-white/5 pt-4 scrollbar-thin text-right text-xs">${cats.map(c => `<div class="category-label">${c}</div><div class="grid grid-cols-2 gap-2 mb-4">${menuItems.filter(m => m.category === c).map(i => `<button onclick="addItem('${t.id}','${i.id}')" class="ios-btn p-4 rounded-2xl text-right font-bold">${i.name}</button>`).join('')}</div>`).join('')}</div><div class="mt-4 grid grid-cols-1 gap-2">${!t.start ? `<button onclick="startOrder('${t.id}')" class="w-full bg-indigo-600 py-5 rounded-[1.5rem] font-black text-xl shadow-xl">הכנסת הזמנה</button>` : `<button onclick="openPaymentModal('${t.id}')" class="w-full bg-white text-black py-5 rounded-[1.5rem] font-black text-xl shadow-xl">לתשלום</button>`}</div>`; document.getElementById('modal-container').classList.remove('hidden'); }
+    function openPaymentModal(id) { const t = tables.find(x => x.id === id); const total = (t.items || []).reduce((a,b) => a + (b.price * b.qty), 0); const modal = document.getElementById('modal-content'); modal.innerHTML = `<div class="text-center"><div class="text-6xl font-black mb-10 text-indigo-400">₪${total}</div><div class="grid grid-cols-2 gap-4 mb-8 text-right px-4"><div><label class="text-[10px] text-gray-500 font-bold uppercase">סכום:</label><input type="number" id="pay-amt" value="${total}" class="w-full glass bg-transparent rounded-3xl p-5 text-center text-3xl font-black outline-none border-white/10 focus:border-white"></div><div><label class="text-[10px] text-gray-500 font-bold mr-2 uppercase tracking-widest text-green-400">טיפ (TIP):</label><input type="number" id="pay-tip" value="0" class="w-full glass bg-transparent rounded-3xl p-5 text-center text-3xl font-black outline-none border-white/10 focus:border-green-500 text-green-400"></div></div><div class="grid grid-cols-2 gap-4 mb-8"><button onclick="window.payM='cash'; finishPay('${id}')" class="glass p-10 rounded-[2.5rem] font-black text-xl hover:bg-white/5">💵 מזומן</button><button onclick="window.payM='credit'; finishPay('${id}')" class="glass p-10 rounded-[2.5rem] font-black text-xl hover:bg-white/5">💳 אשראי</button></div><button onclick="openTableModal('${id}')" class="text-gray-600 font-bold hover:text-white underline">חזור</button></div>`; document.getElementById('modal-container').classList.remove('hidden'); }
+    function closeShift() { if(!confirm("סגירת משמרת? הנתונים יעברו לארכיון.")) return; archive.push({ id: Date.now(), date: new Date().toLocaleDateString('he-IL'), daily: JSON.parse(JSON.stringify(daily)) }); tables = []; daily = { rev:0, orders:0, cash:0, credit:0, cashCount:0, creditCount:0, flavors:{}, hours:{} }; save(); location.reload(); }
+    function openAddTableModal() { const modal = document.getElementById('modal-content'); modal.innerHTML = `<div class="text-center p-4"><h2 class="text-2xl font-black mb-8 uppercase tracking-tighter">פתח שולחן</h2><input type="text" id="new-name" placeholder="שם/מספר" class="w-full glass bg-transparent rounded-3xl p-6 text-center text-4xl font-black outline-none border border-white/10 mb-8 focus:border-white"><button onclick="addTable()" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl shadow-xl">צור שולחן</button></div>`; document.getElementById('modal-container').classList.remove('hidden'); setTimeout(() => document.getElementById('new-name').focus(), 100); }
     function addTable() { const n = document.getElementById('new-name').value; if(!n) return; const id = 't' + Date.now(); tables.push({ id, name: n, hue: Math.floor(Math.random()*360), items: [], paid: false, stage: 0, start: null, staff: document.getElementById('current-staff-name').textContent }); save(); openTableModal(id); }
     function skipTimer(id) { const t = tables.find(x => x.id === id); t.stage++; t.start = Date.now(); save(); render(); }
-    function deleteTable(id) { if(confirm("למחוק?")) { tables = tables.filter(x => x.id !== id); save(); render(); } }
-    function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
-    function openAddTableModal() { const modal = document.getElementById('modal-content'); modal.innerHTML = `<div class="text-center p-4"><h2 class="text-2xl font-black mb-8 uppercase tracking-widest">New Table</h2><input type="text" id="new-name" placeholder="שם/מספר" class="w-full glass bg-transparent rounded-3xl p-6 text-center text-4xl font-black outline-none border border-white/10 mb-8"><button onclick="addTable()" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl shadow-xl">צור שולחן</button></div>`; document.getElementById('modal-container').classList.remove('hidden'); }
     function addItem(tid, mid) { const t = tables.find(x => x.id === tid), m = menuItems.find(x => x.id === mid); const ex = t.items.find(x => x.id === mid); if(ex) ex.qty++; else t.items.push({...m, qty:1}); save(); openTableModal(tid); }
     function removeItem(tid, mid) { const t = tables.find(x => x.id === tid); t.items = t.items.filter(x => x.id !== mid); save(); openTableModal(tid); }
     function updateNotes(id, val) { const t = tables.find(x => x.id === id); t.notes = val; save(); }
+    function deleteTable(id) { if(confirm("למחוק שולחן?")) { tables = tables.filter(x => x.id !== id); save(); render(); } }
+    function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
     function changeUser() { const u = prompt("שם עובד:"); if(u) { document.getElementById('current-staff-name').textContent = u; localStorage.setItem('atmos_staff', u); } }
     function updateClock() { const now = new Date(); const dateStr = now.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: '2-digit' }); document.getElementById('date-time-display').innerHTML = `${now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}<br>${dateStr}`; }
-    function switchTab(id) {}
 
     init();
   </script>
