@@ -3,22 +3,18 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ATMOS - Premium Lounge Management</title>
+  <title>ATMOS - Lounge Management</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
   <style>
     :root { --glass: rgba(255, 255, 255, 0.08); --glass-border: rgba(255, 255, 255, 0.15); }
-    body { 
-        box-sizing: border-box; font-family: 'Assistant', sans-serif; 
-        background: radial-gradient(circle at top left, #1e1b4b, #0f172a, #000); 
-        color: white; margin: 0; overflow: hidden;
-    }
+    body { box-sizing: border-box; font-family: 'Assistant', sans-serif; background: radial-gradient(circle at top left, #1e1b4b, #0f172a, #000); color: white; margin: 0; overflow: hidden; }
     .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 28px; }
-    .ios-btn { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); border: 1px solid var(--glass-border); transition: transform 0.2s ease, background 0.2s ease; }
+    .ios-btn { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); border: 1px solid var(--glass-border); transition: all 0.2s ease; }
     .ios-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.2); }
     .tab-active { background: white !important; color: black !important; font-weight: 800; }
-    .table-card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); backface-visibility: hidden; transform: translateZ(0); }
-    .timer-warning { animation: pulse 1s infinite; background: rgba(239, 68, 68, 0.4) !important; }
+    .table-card { transition: all 0.3s ease; backface-visibility: hidden; }
+    .timer-warning { animation: pulse 1s infinite; background: rgba(239, 68, 68, 0.5) !important; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
     .scrollbar-thin::-webkit-scrollbar { width: 4px; }
     .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
@@ -27,52 +23,55 @@
  <body class="h-full">
   <div id="app" class="h-full flex flex-col p-4 md:p-6 gap-4">
    
-   <header class="glass p-5 flex items-center justify-between shadow-2xl">
+   <header class="glass p-5 flex items-center justify-between">
      <div>
-        <h1 class="text-2xl font-black tracking-tighter">ATMOS <span class="font-thin text-gray-400">LOUNGE</span></h1>
-        <div id="date-time-display" class="text-[10px] text-gray-500 font-bold uppercase mt-1"></div>
+        <h1 class="text-2xl font-black tracking-tighter">ATMOS <span class="font-thin text-gray-400 text-sm">PRO</span></h1>
+        <div id="date-time-display" class="text-[10px] text-gray-500 font-bold mt-1"></div>
      </div>
-     <div class="flex items-center gap-3">
-        <div class="glass px-4 py-2 text-xs flex items-center gap-2">
-            <span id="current-staff-name">מנהל</span>
-            <button onclick="changeUser()" class="mr-2 opacity-50 hover:opacity-100 italic">החלף</button>
-        </div>
+     <div class="glass px-4 py-2 text-xs flex items-center gap-2">
+        <span id="current-staff-name">מנהל</span>
+        <button onclick="changeUser()" class="opacity-50 hover:opacity-100 italic">החלף</button>
      </div>
    </header>
 
    <nav class="glass p-1.5 flex gap-1">
-     <button onclick="switchTab('tables')" id="tab-tables" class="tab-btn tab-active flex-1 py-2.5 rounded-[18px] text-sm font-bold">שולחנות</button>
-     <button onclick="switchTab('expenses')" id="tab-expenses" class="tab-btn flex-1 py-2.5 rounded-[18px] text-sm font-bold text-gray-400">הוצאות</button>
-     <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn flex-1 py-2.5 rounded-[18px] text-sm font-bold text-gray-400">אנליטיקס</button>
-     <button onclick="switchTab('archive')" id="tab-archive" class="tab-btn flex-1 py-2.5 rounded-[18px] text-sm font-bold text-gray-400">ארכיון</button>
+     <button onclick="switchTab('tables')" id="tab-tables" class="tab-btn tab-active flex-1 py-2.5 rounded-[18px] text-xs font-bold transition-all">שולחנות</button>
+     <button onclick="switchTab('expenses')" id="tab-expenses" class="tab-btn flex-1 py-2.5 rounded-[18px] text-xs font-bold text-gray-400">ניהול הוצאות</button>
+     <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn flex-1 py-2.5 rounded-[18px] text-xs font-bold text-gray-400">אנליטיקס</button>
+     <button onclick="switchTab('archive')" id="tab-archive" class="tab-btn flex-1 py-2.5 rounded-[18px] text-xs font-bold text-gray-400">ארכיון</button>
    </nav>
 
    <main class="flex-1 overflow-y-auto scrollbar-thin rounded-[32px]">
-    <div id="view-tables" class="view-content h-full flex flex-col">
-     <div class="flex items-center justify-between mb-4 px-2">
-      <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Active Tables</h2>
-      <button onclick="openAddTableModal()" class="bg-white text-black px-6 py-2.5 rounded-full font-black text-xs shadow-xl">+ פתח שולחן</button>
-     </div>
-     <div id="tables-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
-     <div class="mt-auto pt-10 pb-4 flex justify-center">
-        <button onclick="closeShift()" class="ios-btn px-12 py-4 rounded-[28px] font-black text-lg text-red-400 border-red-500/20 shadow-2xl">🏁 סגירת משמרת</button>
-     </div>
-    </div>
-
-    <div id="view-expenses" class="view-content hidden p-2">
-        <div class="glass p-8 max-w-xl mx-auto">
-            <h2 class="text-xl font-bold mb-6 text-indigo-300">ניהול הוצאות משמרת</h2>
-            <div class="flex gap-2 mb-6">
-                <input type="text" id="exp-desc" placeholder="תיאור (למשל: פחמים)" class="flex-1 glass bg-transparent rounded-xl p-3 outline-none">
-                <input type="number" id="exp-amt" placeholder="סכום" class="w-24 glass bg-transparent rounded-xl p-3 outline-none">
-                <button onclick="addExpense()" class="bg-indigo-600 px-4 rounded-xl font-bold">הוסף</button>
-            </div>
-            <div id="expenses-list" class="space-y-2"></div>
+    <div id="view-tables" class="view-content flex flex-col h-full">
+        <div class="flex justify-between items-center mb-6 px-2">
+            <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Floor</h2>
+            <button onclick="openAddTableModal()" class="bg-white text-black px-6 py-2 rounded-full font-black text-xs">+ שולחן</button>
+        </div>
+        <div id="tables-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+        <div class="mt-auto py-8 flex justify-center">
+            <button onclick="closeShift()" class="ios-btn px-16 py-5 rounded-[30px] font-black text-xl text-red-400 border-red-500/20 shadow-2xl">🏁 סגירת משמרת</button>
         </div>
     </div>
 
-    <div id="view-analytics" class="view-content hidden p-2"><div id="analytics-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div></div>
-    <div id="view-archive" class="view-content hidden p-2"><div id="archive-list" class="space-y-4 max-w-3xl mx-auto"></div></div>
+    <div id="view-expenses" class="view-content hidden">
+        <div class="glass p-8 max-w-xl mx-auto text-right">
+            <h2 class="text-xl font-bold mb-6 text-indigo-400">הזנת הוצאה</h2>
+            <div class="flex gap-2 mb-8">
+                <input type="text" id="exp-desc" placeholder="תיאור ההוצאה" class="flex-1 glass bg-transparent rounded-2xl p-4 outline-none">
+                <input type="number" id="exp-amt" placeholder="₪" class="w-24 glass bg-transparent rounded-2xl p-4 outline-none text-center">
+                <button onclick="addExpense()" class="bg-indigo-600 px-6 rounded-2xl font-bold">הוסף</button>
+            </div>
+            <div id="expenses-list" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <div id="view-analytics" class="view-content hidden p-2">
+        <div id="analytics-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </div>
+
+    <div id="view-archive" class="view-content hidden p-2">
+        <div id="archive-list" class="space-y-4 max-w-4xl mx-auto"></div>
+    </div>
    </main>
   </div>
 
@@ -92,36 +91,15 @@
       { id: 'm3', name: 'Peach Apricot', price: 80, category: 'mono' },
       { id: 'm4', name: 'Lychee Orange Strawberry', price: 80, category: 'mono' },
       { id: 'm5', name: 'Jumango', price: 80, category: 'mono' },
-      { id: 'm6', name: 'Sour Sweet Raspberry', price: 80, category: 'mono' },
-      { id: 'm7', name: 'Ice Sweet Mango', price: 80, category: 'mono' },
-      { id: 'm8', name: 'Berries', price: 80, category: 'mono' },
-      { id: 'm9', name: 'Ice', price: 80, category: 'mono' },
-      { id: 'm10', name: 'Guava Energy Drink', price: 80, category: 'mono' },
-      { id: 'm11', name: 'Island Mix', price: 80, category: 'mono' },
-      { id: 'm12', name: 'Mono Mix', price: 80, category: 'mono' },
       { id: 'mb1', name: 'Grape', price: 85, category: 'mono black' },
-      { id: 'mb2', name: 'Strawberry', price: 85, category: 'mono black' },
-      { id: 'mb3', name: 'Peach', price: 85, category: 'mono black' },
-      { id: 'mb4', name: 'Lychee', price: 85, category: 'mono black' },
       { id: 'ds1', name: 'Cosmo Flower', price: 90, category: 'dark side' },
-      { id: 'ds2', name: 'Deep Blue Sea', price: 90, category: 'dark side' },
-      { id: 'ds3', name: 'Falling Star', price: 90, category: 'dark side' },
-      { id: 'ds4', name: 'Torpedo', price: 90, category: 'dark side' },
       { id: 'mh1', name: 'Nord Star', price: 90, category: 'musthave' },
-      { id: 'mh3', name: 'Space Flavor', price: 90, category: 'musthave' },
-      { id: 'mh4', name: 'Barberry Candy', price: 90, category: 'musthave' },
-      { id: 'mh5', name: 'Must Have 60g – Cola', price: 110, category: 'musthave' },
-      { id: 'mh6', name: 'Must Have 60g – Frosty', price: 110, category: 'musthave' },
       { id: 'mx1', name: 'chill%thrill', price: 95, category: 'מיקסים' },
-      { id: 'mx2', name: 'frooty sunset', price: 95, category: 'מיקסים' },
-      { id: 'mx3', name: 'skitzberry', price: 95, category: 'מיקסים' },
-      { id: 'mx4', name: 'tropical charge', price: 95, category: 'מיקסים' },
-      { id: 'mx5', name: 'peach breeze', price: 95, category: 'מיקסים' },
-      { id: 'mx6', name: 'berry breeze', price: 95, category: 'מיקסים' }
+      { id: 'mx2', name: 'frooty sunset', price: 95, category: 'מיקסים' }
     ];
 
     let tables = JSON.parse(localStorage.getItem('atmos_tables')) || [];
-    let daily = JSON.parse(localStorage.getItem('atmos_daily')) || { rev:0, orders:0, cash:0, credit:0, flavors:{}, expenses:[], hours:{} };
+    let daily = JSON.parse(localStorage.getItem('atmos_daily')) || { rev:0, orders:0, cash:0, credit:0, flavors:{}, expenses:[], hours:{}, shift_logs:[] };
     let archive = JSON.parse(localStorage.getItem('atmos_archive')) || [];
 
     function save() {
@@ -139,29 +117,29 @@
 
     function render() {
       const grid = document.getElementById('tables-grid');
-      if(!grid) return;
-      grid.innerHTML = '';
-      
-      tables.forEach(t => {
-        const card = document.createElement('div');
-        const color = t.paid ? 'rgba(40, 40, 50, 0.7)' : `hsla(${t.hue}, 60%, 40%, 0.7)`;
-        card.className = `table-card glass p-6 flex flex-col items-center justify-center text-center cursor-pointer ${t.paid ? 'opacity-40 grayscale' : ''}`;
-        card.style.backgroundColor = color;
-        card.onclick = () => openTableModal(t.id);
-        
-        card.innerHTML = `
-            <div class="text-3xl font-black mb-1">${t.name}</div>
-            <div class="text-[10px] opacity-60 mb-2 font-bold">${t.staff || '---'}</div>
-            <div class="text-[11px] font-bold bg-black/20 px-4 py-1.5 rounded-full mb-4 ${getTimerWarning(t)}">${getTimerText(t)}</div>
-            ${!t.paid && t.start ? `
-                <div class="grid grid-cols-2 gap-2 w-full">
-                    <button onclick="event.stopPropagation(); skipTimer('${t.id}')" class="ios-btn py-2 rounded-xl text-[10px] font-black uppercase">דלג ➔</button>
-                    <button onclick="event.stopPropagation(); openPaymentModal('${t.id}')" class="ios-btn py-2 rounded-xl text-[10px] font-black uppercase text-green-400">תשלום 💰</button>
-                </div>
-            ` : ''}
-        `;
-        grid.appendChild(card);
-      });
+      if(grid) {
+          grid.innerHTML = '';
+          tables.forEach(t => {
+            const card = document.createElement('div');
+            const color = t.paid ? 'rgba(30, 41, 59, 0.7)' : `hsla(${t.hue}, 70%, 40%, 0.7)`;
+            card.className = `table-card glass p-6 flex flex-col items-center justify-center text-center cursor-pointer ${t.paid ? 'opacity-40 grayscale' : ''}`;
+            card.style.backgroundColor = color;
+            card.onclick = () => openTableModal(t.id);
+            
+            card.innerHTML = `
+                <div class="text-3xl font-black mb-1">${t.name}</div>
+                <div class="text-[10px] opacity-60 mb-2 font-bold">${t.staff || '---'}</div>
+                <div class="text-[11px] font-bold bg-black/20 px-4 py-1.5 rounded-full mb-4 ${getTimerWarning(t)}">${getTimerText(t)}</div>
+                ${!t.paid && t.start ? `
+                    <div class="grid grid-cols-2 gap-2 w-full">
+                        <button onclick="event.stopPropagation(); skipTimer('${t.id}')" class="ios-btn py-2 rounded-xl text-[10px] font-black uppercase tracking-tighter">דלג ➔</button>
+                        <button onclick="event.stopPropagation(); openPaymentModal('${t.id}')" class="ios-btn py-2 rounded-xl text-[10px] font-black uppercase tracking-tighter text-green-400">תשלום 💰</button>
+                    </div>
+                ` : ''}
+            `;
+            grid.appendChild(card);
+          });
+      }
       renderStats();
       renderArchive();
       renderExpenses();
@@ -206,34 +184,34 @@
       modal.innerHTML = `
         <div class="flex justify-between items-center mb-8">
             <h2 class="text-4xl font-black">${t.name}</h2>
-            <button onclick="closeModal()" class="ios-btn p-3 rounded-full">✕</button>
+            <button onclick="closeModal()" class="ios-btn p-3 rounded-full text-gray-500">✕</button>
         </div>
-        
+        <div class="mb-4">
+            <div class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">עובד אחראי: ${t.staff}</div>
+        </div>
         <div class="mb-8">
-            <h3 class="text-[10px] font-black text-gray-500 uppercase mb-3">Order List (₪${total})</h3>
+            <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Order List (₪${total})</h3>
             <div class="space-y-2 max-h-40 overflow-y-auto pr-2 scrollbar-thin">
-                ${(t.items || []).map(i => `<div class="glass p-4 flex justify-between items-center"><span>${i.name} <b>x${i.qty}</b></span><button onclick="removeItem('${t.id}','${i.id}')" class="text-red-500 font-bold">מחק</button></div>`).join('')}
+                ${(t.items || []).map(i => `<div class="glass p-4 flex justify-between items-center text-xs font-bold"><span>${i.name} <b>x${i.qty}</b></span><button onclick="removeItem('${t.id}','${i.id}')" class="text-red-500 font-bold">מחק</button></div>`).join('')}
             </div>
         </div>
-
         <div class="mb-4">
-            <label class="text-[10px] text-gray-500 uppercase font-bold">הערות הזמנה:</label>
-            <textarea id="order-notes" class="w-full glass bg-transparent rounded-2xl p-4 mt-2 outline-none text-sm h-20" onchange="updateNotes('${t.id}', this.value)">${t.notes || ''}</textarea>
+            <textarea id="order-notes" placeholder="הערות להזמנה..." class="w-full glass bg-transparent rounded-2xl p-4 text-xs h-20 outline-none" onchange="updateNotes('${t.id}', this.value)">${t.notes || ''}</textarea>
         </div>
-
-        <div class="mb-8 h-60 overflow-y-auto scrollbar-thin">
+        <div class="mb-8 h-60 overflow-y-auto pr-2 scrollbar-thin text-right">
             ${['מועדפים', 'mono', 'dark side', 'musthave', 'מיקסים'].map(c => `
-                <div class="text-[10px] font-black text-indigo-400 my-4 uppercase border-r-2 border-indigo-500 pr-2">${c}</div>
-                <div class="grid grid-cols-2 gap-2">
-                    ${menuItems.filter(m => m.category === c).map(i => `<button onclick="addItem('${t.id}','${i.id}')" class="ios-btn p-4 rounded-2xl text-right text-xs font-bold">${i.name}</button>`).join('')}
+                <div class="text-[10px] font-black text-indigo-400 mb-3 uppercase tracking-tighter border-r-2 border-indigo-500 pr-2">${c}</div>
+                <div class="grid grid-cols-2 gap-2 mb-6">
+                    ${menuItems.filter(m => m.category === c).map(i => `
+                        <button onclick="addItem('${t.id}','${i.id}')" class="ios-btn p-4 rounded-2xl text-right text-xs font-bold">${i.name}</button>
+                    `).join('')}
                 </div>
             `).join('')}
         </div>
-
         <div class="mt-4">
-            ${!t.start && !t.paid ? `<button onclick="startOrder('${t.id}')" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl shadow-2xl">הכנסת הזמנה</button>` : 
+            ${!t.start && !t.paid ? `<button onclick="startOrder('${t.id}')" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl active:scale-95 transition-all shadow-xl">הכנסת הזמנה</button>` : 
             t.paid ? `<button onclick="deleteTable('${t.id}')" class="w-full ios-btn py-5 rounded-3xl font-black text-red-500">מחק מהמסך</button>` :
-            `<button onclick="openPaymentModal('${t.id}')" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl shadow-2xl">לתשלום</button>`}
+            `<button onclick="openPaymentModal('${t.id}')" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl shadow-xl">לתשלום</button>`}
         </div>
       `;
       document.getElementById('modal-container').classList.remove('hidden');
@@ -246,15 +224,21 @@
         modal.innerHTML = `
             <div class="text-center">
                 <div class="text-6xl font-black mb-10 text-indigo-400">₪${total}</div>
-                <div class="mb-8 text-right px-4">
-                    <label class="text-[10px] text-gray-500 font-bold mr-2 uppercase">סכום ששולם:</label>
-                    <input type="number" id="pay-amt" value="${total}" class="w-full glass bg-transparent rounded-3xl p-6 text-center text-4xl font-black outline-none border-white/20 focus:border-white">
+                <div class="grid grid-cols-2 gap-4 mb-6 text-right px-4">
+                    <div>
+                        <label class="text-[10px] text-gray-500 font-bold uppercase mr-1">סכום ששולם:</label>
+                        <input type="number" id="pay-amt" value="${total}" class="w-full glass bg-transparent rounded-2xl p-4 text-center text-xl font-black border-white/20 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-gray-500 font-bold uppercase mr-1">טיפ (Tip):</label>
+                        <input type="number" id="pay-tip" value="0" class="w-full glass bg-transparent rounded-2xl p-4 text-center text-xl font-black border-white/20 outline-none text-green-400">
+                    </div>
                 </div>
-                <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="grid grid-cols-2 gap-4 mb-10">
                     <button onclick="finishPay('${id}','cash')" class="glass p-10 rounded-[2.5rem] font-black text-xl hover:bg-white/5">💵 מזומן</button>
                     <button onclick="finishPay('${id}','credit')" class="glass p-10 rounded-[2.5rem] font-black text-xl hover:bg-white/5">💳 אשראי</button>
                 </div>
-                <button onclick="openTableModal('${id}')" class="text-gray-600 font-bold hover:text-white">חזור</button>
+                <button onclick="openTableModal('${id}')" class="text-gray-500 font-bold">חזור</button>
             </div>
         `;
     }
@@ -268,40 +252,53 @@
 
     function finishPay(id, method) {
         const t = tables.find(x => x.id === id);
-        const total = (t.items || []).reduce((a,b) => a + (b.price * b.qty), 0);
+        const amt = parseFloat(document.getElementById('pay-amt').value) || 0;
+        const tip = parseFloat(document.getElementById('pay-tip').value) || 0;
+        
         t.paid = true; t.start = null;
-        daily.rev += total; daily.orders++;
-        if(method === 'cash') daily.cash += total; else daily.credit += total;
+        daily.rev += amt; daily.orders++;
+        if(method === 'cash') daily.cash += amt; else daily.credit += amt;
+        
+        daily.shift_logs.push({ 
+            table: t.name, 
+            staff: t.staff, 
+            amount: amt, 
+            tip: tip, 
+            method: method, 
+            items: t.items.map(i => i.name).join(', '),
+            time: new Date().toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})
+        });
+        
         (t.items || []).forEach(i => daily.flavors[i.name] = (daily.flavors[i.name] || 0) + i.qty);
         save(); closeModal(); render();
     }
 
     function closeShift() {
-        if(!confirm("🏁 סגירת משמרת?")) return;
-        const reportId = Date.now();
-        const totalExp = daily.expenses.reduce((a,b)=>a+b.amt, 0);
+        if(!confirm("סגירת משמרת? כל הנתונים יעברו לארכיון.")) return;
         const peak = Object.entries(daily.hours).sort((a,b)=>b[1]-a[1])[0];
+        const totalExp = daily.expenses.reduce((a,b)=>a+b.amt, 0);
         
-        const shiftData = { 
-            id: reportId,
+        archive.push({ 
             date: new Date().toLocaleDateString('he-IL'), 
+            id: Date.now(),
             daily: JSON.parse(JSON.stringify(daily)),
-            net: daily.rev - totalExp,
-            peak: peak ? peak[0] + ':00' : '--'
-        };
+            peak: peak ? peak[0] + ':00' : '--',
+            total_exp: totalExp
+        });
         
-        archive.push(shiftData);
         tables = [];
-        daily = { rev:0, orders:0, cash:0, credit:0, flavors:{}, expenses:[], hours:{} };
+        daily = { rev:0, orders:0, cash:0, credit:0, flavors:{}, expenses:[], hours:{}, shift_logs:[] };
         save();
         location.reload();
     }
 
     function addExpense() {
-        const desc = document.getElementById('exp-desc').value;
-        const amt = parseFloat(document.getElementById('exp-amt').value);
-        if(desc && amt) {
-            daily.expenses.push({ desc, amt });
+        const d = document.getElementById('exp-desc').value;
+        const a = parseFloat(document.getElementById('exp-amt').value);
+        if(d && a) {
+            daily.expenses.push({ desc: d, amt: a });
+            document.getElementById('exp-desc').value = '';
+            document.getElementById('exp-amt').value = '';
             save(); renderExpenses();
         }
     }
@@ -309,25 +306,23 @@
     function renderExpenses() {
         const list = document.getElementById('expenses-list');
         if(!list) return;
-        list.innerHTML = daily.expenses.map((e, i) => `
-            <div class="flex justify-between glass p-3 text-sm">
-                <span>${e.desc}</span>
-                <span class="text-red-400 font-bold">₪${e.amt}</span>
-            </div>
-        `).join('');
+        list.innerHTML = daily.expenses.map((e, i) => `<div class="flex justify-between glass p-4 text-sm font-bold"><span>${e.desc}</span><span class="text-red-400">₪${e.amt}</span></div>`).join('');
     }
 
     function renderStats() {
         const grid = document.getElementById('analytics-grid');
         if(!grid) return;
+        const peak = Object.entries(daily.hours).sort((a,b)=>b[1]-a[1])[0];
+        const exp = daily.expenses.reduce((a,b)=>a+b.amt, 0);
         grid.innerHTML = `
-            <div class="glass p-8">
-                <h3 class="text-indigo-400 font-black mb-6 uppercase text-[10px]">🏆 נמכרו היום</h3>
+            <div class="glass p-8"><h3 class="text-indigo-400 font-black mb-4 uppercase text-[10px]">🏆 טעמים מובילים</h3>
                 ${Object.entries(daily.flavors).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,q])=>`<div class="flex justify-between text-sm py-2 border-b border-white/5"><span>${n}</span><b>${q}</b></div>`).join('')}
             </div>
-            <div class="glass p-8">
-                <h3 class="text-indigo-400 font-black mb-6 uppercase text-[10px]">💰 תקבולים נקי</h3>
-                <div class="text-center py-4"><b class="text-green-400 text-4xl font-black italic">₪${daily.rev}</b></div>
+            <div class="glass p-8 text-center"><h3 class="text-indigo-400 font-black mb-4 uppercase text-[10px]">⏰ שעת שיא</h3>
+                <div class="text-4xl font-black py-4">${peak ? peak[0]+':00' : '--'}</div>
+            </div>
+            <div class="glass p-8 md:col-span-2 flex justify-around"><div class="text-center"><h3 class="text-gray-500 font-bold text-[9px] uppercase mb-1">הכנסות</h3><b class="text-green-400 text-3xl font-black italic">₪${daily.rev}</b></div>
+                <div class="text-center"><h3 class="text-gray-500 font-bold text-[9px] uppercase mb-1">הוצאות</h3><b class="text-red-400 text-3xl font-black italic">₪${exp}</b></div>
             </div>
         `;
     }
@@ -337,62 +332,58 @@
         if(!list) return;
         list.innerHTML = archive.slice().reverse().map(s => `
             <div class="glass overflow-hidden mb-4">
-                <div class="p-6 flex justify-between items-center cursor-pointer" onclick="toggleArchive('${s.id}')">
-                    <span class="font-black text-indigo-300">${s.date}</span>
+                <div class="p-6 flex justify-between items-center cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                    <span class="font-black text-indigo-300 text-xl">${s.date}</span>
                     <div class="flex items-center gap-4">
-                        <span class="text-2xl font-black text-green-400 tracking-tighter">₪${s.daily.rev}</span>
+                        <span class="text-2xl font-black text-green-400">₪${s.daily.rev}</span>
                         <button onclick="event.stopPropagation(); deleteArchive('${s.id}')" class="text-red-900 opacity-30 hover:opacity-100">✕</button>
                     </div>
                 </div>
-                <div id="arch-${s.id}" class="hidden p-6 border-t border-white/5 bg-white/5 space-y-4">
-                    <div class="grid grid-cols-2 gap-4 text-[10px]">
-                        <div><b class="text-indigo-400 uppercase">מידע:</b><br>הזמנות: ${s.daily.orders}<br>שעת שיא: ${s.peak}</div>
-                        <div><b class="text-indigo-400 uppercase">תשלום:</b><br>מזומן: ${s.daily.cash}<br>אשראי: ${s.daily.credit}</div>
+                <div class="hidden p-8 border-t border-white/5 space-y-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-bold">
+                        <div class="glass p-4">הזמנות: ${s.daily.orders}</div>
+                        <div class="glass p-4">מזומן: ₪${s.daily.cash}<br>אשראי: ₪${s.daily.credit}</div>
+                        <div class="glass p-4 text-red-400">הוצאות: ₪${s.total_exp}</div>
+                        <div class="glass p-4">שעת שיא: ${s.peak}</div>
                     </div>
-                    <button onclick="sendWhatsapp('${s.id}')" class="w-full bg-green-600/20 text-green-400 py-3 rounded-xl font-bold border border-green-500/30">שלח סיכום בוואטסאפ ✅</button>
+                    <div class="space-y-2">
+                        <div class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">פירוט שולחנות:</div>
+                        ${s.daily.shift_logs.map(l => `
+                            <div class="glass bg-white/5 p-3 text-[11px] flex justify-between">
+                                <span><b>${l.table}</b> (${l.staff}): ${l.items}</span>
+                                <span>₪${l.amount} ${l.method==='cash'?'💵':'💳'} + ₪${l.tip} Tip</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button onclick="sendWhatsapp('${s.id}')" class="w-full bg-green-500 text-black py-4 rounded-2xl font-black uppercase text-xs">שתף סיכום בוואטסאפ ✅</button>
                 </div>
             </div>`).join('');
     }
 
-    function sendWhatsapp(id) {
-        const s = archive.find(x => x.id == id);
-        const text = encodeURIComponent(`סיכום ATMOS (${s.date}):\nסה"כ הכנסות: ₪${s.daily.rev}\nמזומן: ₪${s.daily.cash}\nאשראי: ₪${s.daily.credit}\nשעת שיא: ${s.peak}`);
-        window.open(`https://wa.me/?text=${text}`);
+    // --- Helper Functions ---
+    function openAddTableModal() {
+        const modal = document.getElementById('modal-content');
+        modal.innerHTML = `<div class="text-center"><h2 class="text-2xl font-black mb-8">פתח שולחן</h2><input type="text" id="new-name" placeholder="שם/מספר" class="w-full glass bg-transparent rounded-3xl p-6 text-center text-4xl font-black outline-none border border-white/10 mb-8"><button onclick="addTable()" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl">צור שולחן</button></div>`;
+        document.getElementById('modal-container').classList.remove('hidden');
     }
-
-    function toggleArchive(id) {
-        const el = document.getElementById('arch-' + id);
-        el.classList.toggle('hidden');
-    }
-
-    function deleteArchive(id) {
-        if(confirm("למחוק מהארכיון?")) { archive = archive.filter(x => x.id != id); save(); render(); }
-    }
-
     function addTable() {
         const n = document.getElementById('new-name').value;
         if(!n) return;
-        const id = 't' + Date.now();
-        const staff = document.getElementById('current-staff-name').textContent;
-        tables.push({ id, name: n, hue: Math.floor(Math.random()*360), items: [], paid: false, stage: 0, start: null, staff });
+        const id = 't'+Date.now();
+        tables.push({ id, name:n, hue:Math.floor(Math.random()*360), items:[], paid:false, stage:0, start:null, staff:document.getElementById('current-staff-name').textContent });
         save(); openTableModal(id);
     }
-
-    function openAddTableModal() {
-        const modal = document.getElementById('modal-content');
-        modal.innerHTML = `<div class="text-center"><h2 class="text-2xl font-black mb-8 uppercase">New Table</h2><input type="text" id="new-name" placeholder="שם/מספר" class="w-full glass bg-transparent rounded-3xl p-6 text-center text-4xl font-black outline-none border border-white/10 mb-8"><button onclick="addTable()" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl active:scale-95">צור שולחן</button></div>`;
-        document.getElementById('modal-container').classList.remove('hidden');
-    }
-
-    function skipTimer(id) { const t = tables.find(x => x.id === id); t.stage++; t.start = Date.now(); save(); render(); }
-    function addItem(tid, mid) { const t = tables.find(x => x.id === tid), m = menuItems.find(x => x.id === mid); const ex = t.items.find(x => x.id === mid); if(ex) ex.qty++; else t.items.push({...m, qty:1}); save(); openTableModal(tid); }
-    function removeItem(tid, mid) { const t = tables.find(x => x.id === tid); t.items = t.items.filter(x => x.id !== mid); save(); openTableModal(tid); }
-    function updateNotes(id, val) { const t = tables.find(x => x.id === id); t.notes = val; save(); }
-    function deleteTable(id) { if(confirm("למחוק?")) { tables = tables.filter(x => x.id !== id); save(); render(); } }
-    function switchTab(id) { document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active', 'text-white')); document.getElementById('tab-'+id).classList.add('tab-active'); }
+    function skipTimer(id) { const t = tables.find(x=>x.id===id); t.stage++; t.start=Date.now(); save(); render(); }
+    function addItem(tid, mid) { const t=tables.find(x=>x.id===tid), m=menuItems.find(x=>x.id===mid); const ex=t.items.find(x=>x.id===mid); if(ex) ex.qty++; else t.items.push({...m,qty:1}); save(); openTableModal(tid); }
+    function removeItem(tid, mid) { const t=tables.find(x=>x.id===tid); t.items=t.items.filter(x=>x.id!==mid); save(); openTableModal(tid); }
+    function updateNotes(id, val) { const t=tables.find(x=>x.id===id); t.notes=val; save(); }
+    function deleteTable(id) { if(confirm("למחוק?")) { tables=tables.filter(x=>x.id!==id); save(); render(); } }
+    function deleteArchive(id) { if(confirm("למחוק?")) { archive=archive.filter(x=>x.id!=id); save(); render(); } }
     function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
-    function updateClock() { const now = new Date(); document.getElementById('date-time-display').innerHTML = `${now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})} | ${now.toLocaleDateString('he-IL')}`; }
-    function changeUser() { const u = prompt("שם עובד:"); if(u) { document.getElementById('current-staff-name').textContent = u; localStorage.setItem('atmos_staff', u); } }
+    function switchTab(id) { document.querySelectorAll('.view-content').forEach(v=>v.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('tab-active','text-white')); document.getElementById('tab-'+id).classList.add('tab-active'); }
+    function changeUser() { const u=prompt("שם עובד:"); if(u) { document.getElementById('current-staff-name').textContent=u; localStorage.setItem('atmos_staff',u); } }
+    function updateClock() { const now=new Date(); document.getElementById('date-time-display').innerHTML = `${now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})} | ${now.toLocaleDateString('he-IL')}`; }
+    function sendWhatsapp(id) { const s=archive.find(x=>x.id==id); const text=encodeURIComponent(`סיכום ATMOS (${s.date}):\nסה"כ הכנסות: ₪${s.daily.rev}\nמזומן: ₪${s.daily.cash} | אשראי: ₪${s.daily.credit}\nהוצאות: ₪${s.total_exp}\nשעת שיא: ${s.peak}`); window.open(`https://wa.me/?text=${text}`); }
 
     init();
   </script>
