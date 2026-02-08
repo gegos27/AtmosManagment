@@ -3,18 +3,19 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ATMOS Management</title>
+  <title>ATMOS - iOS Glass Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
   <style>
     :root { --glass: rgba(255, 255, 255, 0.08); --glass-border: rgba(255, 255, 255, 0.15); }
     body { box-sizing: border-box; font-family: 'Assistant', sans-serif; background: radial-gradient(circle at top left, #1e1b4b, #0f172a, #000); color: white; margin: 0; overflow: hidden; }
     .glass { background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 28px; }
-    .ios-btn { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); border: 1px solid var(--glass-border); transition: all 0.2s ease; cursor: pointer; }
+    .ios-btn { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid var(--glass-border); transition: all 0.2s ease; cursor: pointer; }
     .ios-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.2); }
-    .tab-active { background: white !important; color: black !important; font-weight: 800; }
-    .table-card { transition: all 0.3s ease; position: relative; overflow: hidden; }
-    .timer-warning { animation: pulse 1s infinite; background: rgba(239, 68, 68, 0.5) !important; }
+    .tab-active { background: white !important; color: black !important; font-weight: 800; box-shadow: 0 8px 32px rgba(255,255,255,0.1); }
+    .table-card { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); backface-visibility: hidden; }
+    .table-card:hover { transform: translateY(-5px); }
+    .timer-warning { animation: pulse 1s infinite; background: rgba(239, 68, 68, 0.4) !important; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
     .scrollbar-thin::-webkit-scrollbar { width: 4px; }
     .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
@@ -24,43 +25,45 @@
  <body class="h-full">
   <div id="app" class="h-full flex flex-col p-4 md:p-6 gap-4">
    
-   <header class="glass p-5 flex items-center justify-between">
+   <header class="glass p-5 flex items-center justify-between shadow-2xl">
      <div>
-        <h1 class="text-2xl font-black tracking-tighter">ATMOS <span class="font-thin text-gray-400 text-sm">MANAGEMENT</span></h1>
-        <div id="date-time-display" class="text-[10px] text-gray-500 font-bold mt-1 uppercase"></div>
+        <h1 class="text-2xl font-black tracking-tighter">ATMOS <span class="font-thin text-gray-400 text-sm italic">MANAGEMENT</span></h1>
+        <div id="date-time-display" class="text-[10px] text-gray-500 font-bold mt-1 tracking-widest uppercase"></div>
      </div>
-     <div class="glass px-4 py-2 text-xs flex items-center gap-2">
-        <span id="current-staff-name">מנהל</span>
-        <button onclick="changeUser()" class="opacity-50 hover:opacity-100 italic">החלף</button>
+     <div class="flex items-center gap-3">
+        <div class="glass px-4 py-2 text-xs flex items-center gap-2 border-white/5">
+            <span id="current-staff-name" class="font-black text-indigo-400">מנהל</span>
+            <button onclick="changeUser()" class="mr-2 opacity-50 hover:opacity-100 italic">החלף</button>
+        </div>
      </div>
    </header>
 
    <nav class="glass p-1.5 flex gap-1">
-     <button onclick="switchTab('tables')" id="tab-tables" class="tab-btn tab-active flex-1 py-2.5 rounded-[18px] text-xs font-bold transition-all">שולחנות</button>
-     <button onclick="switchTab('expenses')" id="tab-expenses" class="tab-btn flex-1 py-2.5 rounded-[18px] text-xs font-bold text-gray-400">הוצאות</button>
-     <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn flex-1 py-2.5 rounded-[18px] text-xs font-bold text-gray-400">אנליטיקס</button>
-     <button onclick="switchTab('archive')" id="tab-archive" class="tab-btn flex-1 py-2.5 rounded-[18px] text-xs font-bold text-gray-400">ארכיון</button>
+     <button onclick="switchTab('tables')" id="tab-tables" class="tab-btn tab-active flex-1 py-3 rounded-[20px] text-xs font-black transition-all">שולחנות</button>
+     <button onclick="switchTab('expenses')" id="tab-expenses" class="tab-btn flex-1 py-3 rounded-[20px] text-xs font-black text-gray-400">הוצאות</button>
+     <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn flex-1 py-3 rounded-[20px] text-xs font-black text-gray-400">אנליטיקס</button>
+     <button onclick="switchTab('archive')" id="tab-archive" class="tab-btn flex-1 py-3 rounded-[20px] text-xs font-black text-gray-400">ארכיון</button>
    </nav>
 
    <main class="flex-1 overflow-y-auto scrollbar-thin rounded-[32px]">
     <div id="view-tables" class="view-content flex flex-col h-full">
         <div class="flex justify-between items-center mb-6 px-2">
-            <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Active Tables</h2>
-            <button onclick="openAddTableModal()" class="bg-white text-black px-6 py-2 rounded-full font-black text-xs">+ פתח שולחן</button>
+            <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Active Floor</h2>
+            <button onclick="openAddTableModal()" class="bg-white text-black px-6 py-2.5 rounded-full font-black text-xs shadow-xl active:scale-95 transition-all">+ שולחן</button>
         </div>
         <div id="tables-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
         <div class="mt-auto py-8 flex justify-center">
-            <button onclick="closeShift()" class="ios-btn px-16 py-5 rounded-[30px] font-black text-xl text-red-400 border-red-500/20 shadow-2xl">🏁 סגירת משמרת</button>
+            <button onclick="closeShift()" class="ios-btn px-16 py-5 rounded-[32px] font-black text-xl text-red-400 border-red-500/20 shadow-2xl active:scale-90">🏁 סגירת משמרת</button>
         </div>
     </div>
 
-    <div id="view-expenses" class="view-content hidden">
+    <div id="view-expenses" class="view-content hidden p-2">
         <div class="glass p-8 max-w-xl mx-auto">
-            <h2 class="text-xl font-bold mb-6 text-indigo-400">הזנת הוצאה</h2>
+            <h2 class="text-xl font-bold mb-6 text-indigo-300">הזנת הוצאה</h2>
             <div class="flex gap-2 mb-8">
-                <input type="text" id="exp-desc" placeholder="תיאור" class="flex-1 glass bg-transparent rounded-2xl p-4 outline-none">
-                <input type="number" id="exp-amt" placeholder="₪" class="w-24 glass bg-transparent rounded-2xl p-4 outline-none text-center">
-                <button onclick="addExpense()" class="bg-indigo-600 px-6 rounded-2xl font-bold">הוסף</button>
+                <input type="text" id="exp-desc" placeholder="תיאור" class="flex-1 glass bg-transparent rounded-2xl p-4 outline-none border-white/5 focus:border-white/20">
+                <input type="number" id="exp-amt" placeholder="₪" class="w-24 glass bg-transparent rounded-2xl p-4 outline-none text-center border-white/5">
+                <button onclick="addExpense()" class="bg-indigo-600 px-6 rounded-2xl font-bold active:scale-95 transition-all">הוסף</button>
             </div>
             <div id="expenses-list" class="space-y-3"></div>
         </div>
@@ -76,8 +79,8 @@
    </main>
   </div>
 
-  <div id="modal-container" class="hidden fixed inset-0 z-50 modal-backdrop flex items-end md:items-center justify-center p-0 md:p-4">
-   <div id="modal-content" class="bg-black/90 backdrop-blur-3xl w-full max-w-lg rounded-t-[40px] md:rounded-[40px] max-h-[92vh] overflow-y-auto border-t md:border border-white/10 p-8 shadow-2xl scrollbar-thin"></div>
+  <div id="modal-container" class="hidden fixed inset-0 z-50 modal-backdrop flex items-end md:items-center justify-center p-0 md:p-4" onclick="if(event.target === this) closeModal()">
+   <div id="modal-content" class="bg-black/90 backdrop-blur-3xl w-full max-w-lg rounded-t-[40px] md:rounded-[40px] max-h-[92vh] overflow-y-auto border-t md:border border-white/10 p-8 shadow-2xl scrollbar-thin" onclick="event.stopPropagation()"></div>
   </div>
 
   <script>
@@ -143,22 +146,22 @@
           grid.innerHTML = '';
           tables.forEach(t => {
             const card = document.createElement('div');
-            const color = t.paid ? 'rgba(30, 41, 59, 0.7)' : `hsla(${t.hue}, 70%, 40%, 0.7)`;
-            card.className = `table-card glass p-6 flex flex-col items-center justify-center text-center cursor-pointer ${t.paid ? 'opacity-40 grayscale' : ''}`;
+            const color = t.paid ? 'rgba(30, 41, 59, 0.7)' : `hsla(${t.hue}, 75%, 45%, 0.8)`;
+            card.className = `table-card glass p-6 flex flex-col items-center justify-center text-center cursor-pointer shadow-2xl ${t.paid ? 'opacity-40 grayscale' : ''}`;
             card.style.backgroundColor = color;
             card.onclick = () => openTableModal(t.id);
             
             card.innerHTML = `
                 <div class="text-3xl font-black mb-1">${t.name}</div>
-                <div class="text-[9px] opacity-60 mb-2 font-bold">${t.staff}</div>
-                <div class="text-[11px] font-bold bg-black/20 px-4 py-1.5 rounded-full mb-4 ${getTimerWarning(t)}">${getTimerText(t)}</div>
+                <div class="text-[9px] opacity-60 mb-2 font-bold uppercase tracking-tighter">${t.staff}</div>
+                <div class="text-[11px] font-black bg-black/30 px-4 py-2 rounded-full mb-4 ${getTimerWarning(t)}">${getTimerText(t)}</div>
                 ${!t.paid && t.start ? `
                     <div class="grid grid-cols-2 gap-2 w-full mt-2">
-                        <button onclick="event.stopPropagation(); skipTimer('${t.id}')" class="ios-btn py-2.5 rounded-2xl text-[9px] font-black uppercase">דלג ➔</button>
-                        <button onclick="event.stopPropagation(); openPaymentModal('${t.id}')" class="ios-btn py-2.5 rounded-2xl text-[9px] font-black uppercase text-green-400">תשלום 💰</button>
+                        <button onclick="event.stopPropagation(); skipTimer('${t.id}')" class="ios-btn py-3 rounded-2xl text-[9px] font-black uppercase tracking-tighter">דלג ➔</button>
+                        <button onclick="event.stopPropagation(); openPaymentModal('${t.id}')" class="ios-btn py-3 rounded-2xl text-[9px] font-black uppercase tracking-tighter text-green-400">תשלום 💰</button>
                     </div>
                 ` : ''}
-                <button onclick="event.stopPropagation(); deleteTable('${t.id}')" class="absolute top-3 left-3 text-white/10 hover:text-white">✕</button>
+                <button onclick="event.stopPropagation(); deleteTable('${t.id}')" class="absolute top-4 left-4 text-white/10 hover:text-white transition-colors">✕</button>
             `;
             grid.appendChild(card);
           });
@@ -169,9 +172,9 @@
     }
 
     function getTimerText(t) {
-      if (!t.start || t.paid) return 'פנוי';
+      if (!t.start || t.paid) return 'READY';
       const s = t.stage || 0;
-      if (s >= STAGES.length) return 'סיום';
+      if (s >= STAGES.length) return 'FINISH';
       const rem = Math.max(0, STAGES[s].d - Math.floor((Date.now() - t.start) / 1000));
       return `${STAGES[s].n}: ${Math.floor(rem/60)}:${(rem%60).toString().padStart(2, '0')}`;
     }
@@ -209,7 +212,7 @@
       modal.innerHTML = `
         <div class="flex justify-between items-center mb-8">
             <h2 class="text-4xl font-black">${t.name}</h2>
-            <button onclick="closeModal()" class="ios-btn p-3 rounded-full">✕</button>
+            <button onclick="closeModal()" class="ios-btn p-3 rounded-full text-gray-500">✕</button>
         </div>
         <div class="mb-8">
             <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Order Status (₪${total})</h3>
@@ -217,8 +220,11 @@
                 ${(t.items || []).map(i => `<div class="glass p-4 flex justify-between items-center font-bold"><span>${i.name} <b>x${i.qty}</b></span><button onclick="removeItem('${t.id}','${i.id}')" class="text-red-500">מחק</button></div>`).join('')}
             </div>
         </div>
-        <textarea id="order-notes" placeholder="הערות להזמנה..." class="w-full glass bg-transparent rounded-2xl p-4 text-xs h-20 outline-none mb-6" onchange="updateNotes('${t.id}', this.value)">${t.notes || ''}</textarea>
-        <div class="mb-8 h-60 overflow-y-auto scrollbar-thin text-right">
+        <div class="mb-4">
+            <label class="text-[10px] text-gray-500 font-bold tracking-widest">הערות להזמנה:</label>
+            <textarea id="order-notes" placeholder="למשל: נמוך, הרבה קרח..." class="w-full glass bg-transparent rounded-2xl p-4 text-xs h-20 outline-none border-white/5 mt-2" onchange="updateNotes('${t.id}', this.value)">${t.notes || ''}</textarea>
+        </div>
+        <div class="mb-8 h-64 overflow-y-auto pr-2 scrollbar-thin text-right">
             ${cats.map(c => `
                 <div class="category-label">${c}</div>
                 <div class="grid grid-cols-2 gap-2 mb-4">
@@ -227,9 +233,9 @@
             `).join('')}
         </div>
         <div class="mt-4">
-            ${!t.start && !t.paid ? `<button onclick="startOrder('${t.id}')" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl active:scale-95 shadow-xl">הכנסת הזמנה</button>` : 
-            t.paid ? `<button onclick="deleteTable('${t.id}')" class="w-full ios-btn py-5 rounded-3xl font-black text-red-500">מחק</button>` :
-            `<button onclick="openPaymentModal('${t.id}')" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl shadow-xl">לתשלום</button>`}
+            ${!t.start && !t.paid ? `<button onclick="startOrder('${t.id}')" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl active:scale-95 shadow-xl transition-all uppercase tracking-widest">הכנסת הזמנה</button>` : 
+            t.paid ? `<button onclick="deleteTable('${t.id}')" class="w-full ios-btn py-5 rounded-3xl font-black text-red-500">מחק מהמסך</button>` :
+            `<button onclick="openPaymentModal('${t.id}')" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl shadow-xl active:scale-95 transition-all">לתשלום (💰)</button>`}
         </div>
       `;
       document.getElementById('modal-container').classList.remove('hidden');
@@ -241,18 +247,19 @@
         const modal = document.getElementById('modal-content');
         modal.innerHTML = `
             <div class="text-center">
-                <div class="text-6xl font-black mb-10 text-indigo-400">₪${total}</div>
-                <div class="grid grid-cols-2 gap-4 mb-8 text-right px-4">
-                    <div><label class="text-[9px] text-gray-500 font-bold uppercase">סכום ששולם:</label><input type="number" id="pay-amt" value="${total}" class="w-full glass bg-transparent rounded-2xl p-4 text-center text-xl font-black outline-none border-white/10"></div>
-                    <div><label class="text-[9px] text-gray-500 font-bold uppercase">טיפ (Tip):</label><input type="number" id="pay-tip" value="0" class="w-full glass bg-transparent rounded-2xl p-4 text-center text-xl font-black border-white/10 text-green-400"></div>
+                <div class="text-6xl font-black mb-10 text-indigo-400 tracking-tighter">₪${total}</div>
+                <div class="grid grid-cols-2 gap-4 mb-8 text-right px-4 text-xs">
+                    <div><label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">סכום ששולם:</label><input type="number" id="pay-amt" value="${total}" class="w-full glass bg-transparent rounded-2xl p-4 text-center text-xl font-black border-white/10 outline-none"></div>
+                    <div><label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">טיפ (Tip):</label><input type="number" id="pay-tip" value="0" class="w-full glass bg-transparent rounded-2xl p-4 text-center text-xl font-black border-white/10 text-green-400"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4 mb-8">
-                    <button onclick="window.payM='cash'; finishPay('${id}')" class="glass p-10 rounded-[2.5rem] font-black text-xl hover:bg-white/5 active:scale-95">💵 מזומן</button>
-                    <button onclick="window.payM='credit'; finishPay('${id}')" class="glass p-10 rounded-[2.5rem] font-black text-xl hover:bg-white/5 active:scale-95">💳 אשראי</button>
+                    <button onclick="window.payM='cash'; finishPay('${id}')" class="glass p-12 rounded-[2.5rem] font-black text-xl hover:bg-white/5 active:scale-95 transition-all">💵 מזומן</button>
+                    <button onclick="window.payM='credit'; finishPay('${id}')" class="glass p-12 rounded-[2.5rem] font-black text-xl hover:bg-white/5 active:scale-95 transition-all">💳 אשראי</button>
                 </div>
-                <button onclick="openTableModal('${id}')" class="text-gray-500 font-bold">חזור</button>
+                <button onclick="openTableModal('${id}')" class="text-gray-500 font-bold">חזור לעריכה</button>
             </div>
         `;
+        document.getElementById('modal-container').classList.remove('hidden');
     }
 
     function startOrder(id) {
@@ -279,7 +286,7 @@
     }
 
     function closeShift() {
-        if(!confirm("סגור משמרת? הכל יעבור לארכיון.")) return;
+        if(!confirm("סגור משמרת? הנתונים יועברו לארכיון.")) return;
         const peak = Object.entries(daily.hours).sort((a,b)=>b[1]-a[1])[0];
         const totalExp = daily.expenses.reduce((a,b)=>a+b.amt, 0);
         archive.push({ date: new Date().toLocaleDateString('he-IL'), id: Date.now(), daily: JSON.parse(JSON.stringify(daily)), peak: peak ? peak[0]+':00' : '--', total_exp: totalExp });
@@ -304,12 +311,12 @@
         const peak = Object.entries(daily.hours).sort((a,b)=>b[1]-a[1])[0];
         const exp = daily.expenses.reduce((a,b)=>a+b.amt, 0);
         grid.innerHTML = `
-            <div class="glass p-8"><h3 class="text-indigo-400 font-black mb-4 uppercase text-[9px]">🏆 טעמים מובילים</h3>
+            <div class="glass p-8"><h3 class="text-indigo-400 font-black mb-4 uppercase text-[9px] tracking-widest">🏆 טעמים מובילים</h3>
                 ${Object.entries(daily.flavors).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,q])=>`<div class="flex justify-between text-sm py-2 border-b border-white/5"><span>${n}</span><b>${q}</b></div>`).join('')}
             </div>
-            <div class="glass p-8 text-center"><h3 class="text-indigo-400 font-black mb-4 uppercase text-[9px]">⏰ שעת שיא</h3><div class="text-4xl font-black py-4">${peak ? peak[0]+':00' : '--'}</div></div>
-            <div class="glass p-8 md:col-span-2 flex justify-around"><div class="text-center"><h3 class="text-gray-500 font-bold text-[9px] mb-1">הכנסות</h3><b class="text-green-400 text-3xl font-black italic">₪${daily.rev}</b></div>
-                <div class="text-center"><h3 class="text-gray-500 font-bold text-[9px] mb-1">הוצאות</h3><b class="text-red-400 text-3xl font-black italic">₪${exp}</b></div>
+            <div class="glass p-8 text-center"><h3 class="text-indigo-400 font-black mb-4 uppercase text-[9px] tracking-widest">⏰ שעת שיא</h3><div class="text-4xl font-black py-4 tracking-tighter">${peak ? peak[0]+':00' : '--'}</div></div>
+            <div class="glass p-8 md:col-span-2 flex justify-around"><div class="text-center"><h3 class="text-gray-500 font-bold text-[9px] uppercase mb-1">הכנסות</h3><b class="text-green-400 text-4xl font-black italic">₪${daily.rev}</b></div>
+                <div class="text-center"><h3 class="text-gray-500 font-bold text-[9px] uppercase mb-1">הוצאות</h3><b class="text-red-400 text-3xl font-black italic">₪${exp}</b></div>
             </div>
         `;
     }
@@ -318,28 +325,30 @@
         const list = document.getElementById('archive-list');
         if(!list) return;
         list.innerHTML = archive.slice().reverse().map(s => `
-            <div class="glass overflow-hidden mb-4">
+            <div class="glass overflow-hidden mb-4 shadow-xl">
                 <div class="p-6 flex justify-between items-center cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
                     <span class="font-black text-indigo-300 text-xl">${s.date}</span>
-                    <div class="flex items-center gap-6"><span class="text-2xl font-black text-green-400">₪${s.daily.rev}</span><button onclick="event.stopPropagation(); deleteArchive('${s.id}')" class="text-red-900/40 hover:text-red-500">✕</button></div>
+                    <div class="flex items-center gap-6"><span class="text-2xl font-black text-green-400">₪${s.daily.rev}</span><button onclick="event.stopPropagation(); deleteArchive('${s.id}')" class="text-red-900/50 hover:text-red-500 transition-colors">✕</button></div>
                 </div>
-                <div class="hidden p-8 border-t border-white/5 space-y-6">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-[10px] font-black">
-                        <div class="glass p-4">הזמנות: ${s.daily.orders}</div>
-                        <div class="glass p-4 text-green-400">מזומן: ₪${s.daily.cash}<br>אשראי: ₪${s.daily.credit}</div>
-                        <div class="glass p-4 text-red-400">הוצאות: ₪${s.total_exp}</div>
-                        <div class="glass p-4 text-indigo-400">שעת שיא: ${s.peak}</div>
+                <div class="hidden p-8 border-t border-white/5 space-y-8 bg-white/5">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-black">
+                        <div class="glass p-5 border-white/5">הזמנות: ${s.daily.orders}</div>
+                        <div class="glass p-5 border-white/5 text-green-400 text-[9px]">מזומן: ₪${s.daily.cash}<br>אשראי: ₪${s.daily.credit}</div>
+                        <div class="glass p-5 border-white/5 text-red-400">הוצאות: ₪${s.total_exp}</div>
+                        <div class="glass p-5 border-white/5">שיא: ${s.peak}</div>
                     </div>
                     <div class="space-y-2">
+                        <div class="text-[9px] text-gray-500 font-black uppercase mb-3 tracking-widest">פירוט עסקאות:</div>
                         ${s.daily.logs.map(l => `<div class="glass bg-white/5 p-4 text-[11px] flex justify-between border-white/5"><span><b>${l.table}</b> (${l.staff}): ${l.items}</span><span>₪${l.amount} ${l.method==='cash'?'💵':'💳'} + ₪${l.tip} Tip</span></div>`).join('')}
                     </div>
+                    <button onclick="sendWhatsapp('${s.id}')" class="w-full bg-green-500/20 text-green-400 py-4 rounded-2xl font-black text-xs border border-green-500/30 uppercase tracking-widest">Share Shift Summary ✅</button>
                 </div>
             </div>`).join('');
     }
 
     function openAddTableModal() {
         const modal = document.getElementById('modal-content');
-        modal.innerHTML = `<div class="text-center"><h2 class="text-2xl font-black mb-8 uppercase">פתח שולחן</h2><input type="text" id="new-name" placeholder="שם/מספר" class="w-full glass bg-transparent rounded-3xl p-6 text-center text-4xl font-black outline-none border border-white/10 mb-8 focus:border-white transition-all"><button onclick="addTable()" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl">צור שולחן</button></div>`;
+        modal.innerHTML = `<div class="text-center"><h2 class="text-2xl font-black mb-8 uppercase tracking-widest">Open Table</h2><input type="text" id="new-name" placeholder="שם/מספר" class="w-full glass bg-transparent rounded-3xl p-6 text-center text-4xl font-black outline-none border border-white/10 mb-8 focus:border-white"><button onclick="addTable()" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl shadow-xl active:scale-95 transition-all">צור שולחן</button></div>`;
         document.getElementById('modal-container').classList.remove('hidden');
     }
 
@@ -351,7 +360,7 @@
         save(); openTableModal(id);
     }
 
-    function deleteArchive(id) { if(confirm("מחיקה?")) { archive = archive.filter(x => x.id != id); save(); render(); } }
+    function deleteArchive(id) { if(confirm("למחוק לצמיתות?")) { archive = archive.filter(x => x.id != id); save(); render(); } }
     function skipTimer(id) { const t = tables.find(x=>x.id===id); t.stage++; t.start=Date.now(); save(); render(); }
     function addItem(tid, mid) { const t=tables.find(x=>x.id===tid), m=menuItems.find(x=>x.id===mid); const ex=t.items.find(x=>x.id===mid); if(ex) ex.qty++; else t.items.push({...m,qty:1}); save(); openTableModal(tid); }
     function removeItem(tid, mid) { const t=tables.find(x=>x.id===tid); t.items=t.items.filter(x=>x.id!==mid); save(); openTableModal(tid); }
@@ -361,7 +370,11 @@
     function switchTab(id) { document.querySelectorAll('.view-content').forEach(v=>v.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('tab-active','text-white')); document.getElementById('tab-'+id).classList.add('tab-active'); }
     function changeUser() { const u=prompt("שם עובד:"); if(u) { document.getElementById('current-staff-name').textContent=u; localStorage.setItem('atmos_staff',u); } }
     function updateClock() { const now=new Date(); document.getElementById('date-time-display').innerHTML = `${now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})} | ${now.toLocaleDateString('he-IL')}`; }
-    function renderInventory() { document.getElementById('inventory-grid').innerHTML = menuItems.map(i => `<div class="glass p-4 border-white/5 flex justify-between items-center text-[11px] font-black"><span>${i.name}</span><span class="text-indigo-400 opacity-60 uppercase text-[9px]">${i.category}</span></div>`).join(''); }
+    function sendWhatsapp(id) { 
+        const s = archive.find(x => x.id == id);
+        const text = encodeURIComponent(`סיכום ATMOS (${s.date}):\nסה"כ הכנסות: ₪${s.daily.rev}\nמזומן: ₪${s.daily.cash} | אשראי: ₪${s.daily.credit}\nהוצאות: ₪${s.total_exp}\nשעת שיא: ${s.peak}`);
+        window.open(`https://wa.me/?text=${text}`);
+    }
 
     init();
   </script>
