@@ -3,7 +3,7 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ATMOS PRO - Payment Phase</title>
+  <title>ATMOS Management PRO</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
   <style>
@@ -43,7 +43,7 @@
    <main class="flex-1 overflow-y-auto scrollbar-thin rounded-[32px]">
     <div id="view-tables" class="view-content flex flex-col h-full">
         <div class="flex justify-between items-center mb-4 px-2">
-            <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-widest">שולחנות פעילים</h2>
+            <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Active Tables</h2>
             <button onclick="openAddTableModal()" class="bg-white text-black px-6 py-2 rounded-full font-black text-xs shadow-xl active:scale-95 transition-all">+ שולחן</button>
         </div>
         <div id="active-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
@@ -51,14 +51,14 @@
         <div id="closed-section" class="hidden mt-12">
             <div class="flex items-center gap-4 mb-6 px-2">
                 <span class="h-px flex-1 bg-white/10"></span>
-                <h2 class="text-[10px] font-black text-gray-600 uppercase tracking-widest whitespace-nowrap">שולחנות שנסגרו</h2>
+                <h2 class="text-[10px] font-black text-gray-600 uppercase tracking-widest whitespace-nowrap">Closed Tables</h2>
                 <span class="h-px flex-1 bg-white/10"></span>
             </div>
             <div id="closed-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 opacity-60"></div>
         </div>
 
         <div class="mt-auto pt-10 pb-4 flex justify-center">
-            <button onclick="closeShift()" class="ios-btn px-16 py-5 rounded-[28px] font-black text-lg text-red-400 border-red-500/20 shadow-2xl">🏁 סגירת משמרת</button>
+            <button onclick="closeShift()" class="ios-btn px-16 py-5 rounded-[28px] font-black text-lg text-red-400 border-red-500/20 shadow-2xl active:scale-95 transition-all">🏁 סגירת משמרת</button>
         </div>
     </div>
    </main>
@@ -70,12 +70,43 @@
 
   <script>
     const STAGES = [{n:'הכנה', d:15*60}, {n:'גחלים 1', d:30*60}, {n:'גחלים 2', d:30*60}];
+    
+    // רשימת טעמים מלאה
     const menuItems = [
+      { id: 'mx1', name: 'chill%thrill', price: 95, category: 'מיקסים' },
+      { id: 'mx2', name: 'frooty sunset', price: 95, category: 'מיקסים' },
+      { id: 'mx3', name: 'skitzberry', price: 95, category: 'מיקסים' },
+      { id: 'mx4', name: 'tropical charge', price: 95, category: 'מיקסים' },
+      { id: 'mx5', name: 'peach breeze', price: 95, category: 'מיקסים' },
+      { id: 'mx6', name: 'berry breeze', price: 95, category: 'מיקסים' },
       { id: 'f1', name: 'Pinkman', price: 85, category: 'מועדפים' },
       { id: 'f2', name: 'Lemon Mint', price: 80, category: 'מועדפים' },
+      { id: 'f3', name: 'Ice Blueberry Mint', price: 80, category: 'מועדפים' },
       { id: 'm1', name: 'Purple Skitlzz', price: 80, category: 'mono' },
+      { id: 'm2', name: 'Tik Tak', price: 80, category: 'mono' },
+      { id: 'm3', name: 'Peach Apricot', price: 80, category: 'mono' },
+      { id: 'm4', name: 'Lychee Orange Strawberry', price: 80, category: 'mono' },
+      { id: 'm5', name: 'Jumango', price: 80, category: 'mono' },
+      { id: 'm6', name: 'Sour Sweet Raspberry', price: 80, category: 'mono' },
+      { id: 'm7', name: 'Ice Sweet Mango', price: 80, category: 'mono' },
+      { id: 'm8', name: 'Berries', price: 80, category: 'mono' },
+      { id: 'm9', name: 'Ice', price: 80, category: 'mono' },
+      { id: 'm10', name: 'Guava Energy Drink', price: 80, category: 'mono' },
+      { id: 'm11', name: 'Island Mix', price: 80, category: 'mono' },
+      { id: 'm12', name: 'Mono Mix', price: 80, category: 'mono' },
+      { id: 'mb1', name: 'Grape', price: 85, category: 'mono black' },
+      { id: 'mb2', name: 'Strawberry', price: 85, category: 'mono black' },
+      { id: 'mb3', name: 'Peach', price: 85, category: 'mono black' },
+      { id: 'mb4', name: 'Lychee', price: 85, category: 'mono black' },
       { id: 'ds1', name: 'Cosmo Flower', price: 90, category: 'dark side' },
-      { id: 'mx1', name: 'chill%thrill', price: 95, category: 'מיקסים' }
+      { id: 'ds2', name: 'Deep Blue Sea', price: 90, category: 'dark side' },
+      { id: 'ds3', name: 'Falling Star', price: 90, category: 'dark side' },
+      { id: 'ds4', name: 'Torpedo', price: 90, category: 'dark side' },
+      { id: 'mh1', name: 'Nord Star', price: 90, category: 'musthave' },
+      { id: 'mh3', name: 'Space Flavor', price: 90, category: 'musthave' },
+      { id: 'mh4', name: 'Barberry Candy', price: 90, category: 'musthave' },
+      { id: 'mh5', name: 'Must Have 60g – Cola', price: 110, category: 'musthave' },
+      { id: 'mh6', name: 'Must Have 60g – Frosty', price: 110, category: 'musthave' }
     ];
 
     let tables = JSON.parse(localStorage.getItem('atmos_tables')) || [];
@@ -97,7 +128,6 @@
       
       activeGrid.innerHTML = '';
       closedGrid.innerHTML = '';
-
       let closedCount = 0;
 
       tables.forEach(t => {
@@ -120,14 +150,9 @@
             <button onclick="event.stopPropagation(); deleteTable('${t.id}')" class="absolute top-3 left-3 text-white/10 hover:text-white transition-colors p-1">✕</button>
         `;
 
-        if (t.paid) {
-            closedGrid.appendChild(card);
-            closedCount++;
-        } else {
-            activeGrid.appendChild(card);
-        }
+        if (t.paid) { closedGrid.appendChild(card); closedCount++; }
+        else { activeGrid.appendChild(card); }
       });
-
       closedSection.style.display = closedCount > 0 ? 'block' : 'none';
     }
 
@@ -165,9 +190,10 @@
 
     function openTableModal(id) {
       const t = tables.find(x => x.id === id);
+      if(!t) return;
       const total = (t.items || []).reduce((a,b) => a + (b.price * b.qty), 0);
       const modal = document.getElementById('modal-content');
-      const cats = ['מועדפים', 'mono', 'dark side', 'musthave', 'מיקסים'];
+      const cats = ['מיקסים', 'מועדפים', 'mono', 'mono black', 'dark side', 'musthave'];
 
       modal.innerHTML = `
         <div class="flex justify-between items-center mb-8">
@@ -175,16 +201,20 @@
             <button onclick="closeModal()" class="ios-btn p-3 rounded-full text-gray-400">✕</button>
         </div>
         <div class="mb-8">
-            <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Items:</h3>
+            <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Order Status (₪${total})</h3>
             <div class="space-y-2 max-h-32 overflow-y-auto pr-2 scrollbar-thin text-xs">
                 ${(t.items || []).map(i => `<div class="glass p-4 flex justify-between items-center"><span>${i.name} <b>x${i.qty}</b></span><button onclick="removeItem('${t.id}','${i.id}')" class="text-red-500 font-bold uppercase text-[9px]">מחק</button></div>`).join('')}
             </div>
         </div>
-        <div class="mb-8 h-60 overflow-y-auto border-t border-white/5 pt-4 scrollbar-thin text-right">
+        <div class="mb-4 text-right">
+            <label class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">הערות הזמנה:</label>
+            <textarea class="w-full glass bg-transparent rounded-2xl p-4 text-xs h-20 outline-none border-white/5 mt-2" onchange="updateNotes('${t.id}', this.value)" placeholder="הערות מיוחדות...">${t.notes || ''}</textarea>
+        </div>
+        <div class="mb-8 h-60 overflow-y-auto border-t border-white/5 pt-4 scrollbar-thin text-right text-xs">
             ${cats.map(c => `
                 <div class="category-label">${c}</div>
                 <div class="grid grid-cols-2 gap-2 mb-4">
-                    ${menuItems.filter(m => m.category === c).map(i => `<button onclick="addItem('${t.id}','${i.id}')" class="ios-btn p-4 rounded-2xl text-right text-[11px] font-bold">${i.name}</button>`).join('')}
+                    ${menuItems.filter(m => m.category === c).map(i => `<button onclick="addItem('${t.id}','${i.id}')" class="ios-btn p-4 rounded-2xl text-right font-bold">${i.name}</button>`).join('')}
                 </div>
             `).join('')}
         </div>
@@ -223,65 +253,40 @@
                 <button onclick="openTableModal('${id}')" class="text-gray-600 font-bold hover:text-white underline">חזור להזמנה</button>
             </div>
         `;
+        document.getElementById('modal-container').classList.remove('hidden');
     }
 
     function finishPay(id, method) {
         const t = tables.find(x => x.id === id);
         const amt = parseFloat(document.getElementById('pay-amt').value);
         const tip = parseFloat(document.getElementById('pay-tip').value);
-        
         t.paid = true;
         t.payment_method = method;
         t.final_amount = amt;
         t.tip_amount = tip;
-        t.timer_start_time = null; // עצירת טיימר
-
-        save();
-        closeModal();
-        render();
+        t.timer_start_time = null;
+        save(); closeModal(); render();
     }
 
     function closeShift() {
-        if(!confirm("סגירת משמרת? כל השולחנות יימחקו מהמסך.")) return;
-        // הכנה לארכיון (נשמר בזיכרון של archive)
-        const shiftData = {
-            id: Date.now(),
-            date: new Date().toLocaleDateString('he-IL'),
-            tables: tables.filter(t => t.paid)
-        };
-        archive.push(shiftData);
-        tables = []; // מחיקת שולחנות מהמסך
-        save();
-        localStorage.setItem('atmos_archive', JSON.stringify(archive));
+        if(!confirm("סגירת משמרת? הנתונים יעברו לארכיון.")) return;
+        archive.push({ id: Date.now(), date: new Date().toLocaleDateString('he-IL'), tables: tables.filter(t => t.paid) });
+        tables = []; save(); localStorage.setItem('atmos_archive', JSON.stringify(archive));
         location.reload();
     }
 
-    // --- Helper Functions ---
-    function startOrder(id) {
-        const t = tables.find(x => x.id === id);
-        t.start = Date.now(); t.stage = 0;
-        save(); closeModal(); render();
-    }
-    function addTable() {
-        const n = document.getElementById('new-name').value;
-        if(!n) return;
-        const id = 't' + Date.now();
-        tables.push({ id, name: n, hue: Math.floor(Math.random()*360), items: [], paid: false, stage: 0, start: null, staff: document.getElementById('current-staff-name').textContent });
-        save(); openTableModal(id);
-    }
+    function startOrder(id) { const t = tables.find(x => x.id === id); t.start = Date.now(); t.stage = 0; save(); closeModal(); render(); }
+    function addTable() { const n = document.getElementById('new-name').value; if(!n) return; const id = 't' + Date.now(); tables.push({ id, name: n, hue: Math.floor(Math.random()*360), items: [], paid: false, stage: 0, start: null, staff: document.getElementById('current-staff-name').textContent }); save(); openTableModal(id); }
     function skipTimer(id) { const t = tables.find(x => x.id === id); t.stage++; t.start = Date.now(); save(); render(); }
-    function deleteTable(id) { if(confirm("למחוק שולחן?")) { tables = tables.filter(x => x.id !== id); save(); render(); } }
+    function deleteTable(id) { if(confirm("למחוק?")) { tables = tables.filter(x => x.id !== id); save(); render(); } }
     function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
-    function openAddTableModal() {
-        const modal = document.getElementById('modal-content');
-        modal.innerHTML = `<div class="text-center p-4"><h2 class="text-2xl font-black mb-8 uppercase tracking-widest">New Table</h2><input type="text" id="new-name" placeholder="שם/מספר" class="w-full glass bg-transparent rounded-3xl p-6 text-center text-4xl font-black outline-none border border-white/10 mb-8"><button onclick="addTable()" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl shadow-xl">צור שולחן</button></div>`;
-        document.getElementById('modal-container').classList.remove('hidden');
-    }
+    function openAddTableModal() { const modal = document.getElementById('modal-content'); modal.innerHTML = `<div class="text-center p-4"><h2 class="text-2xl font-black mb-8 uppercase tracking-widest">New Table</h2><input type="text" id="new-name" placeholder="שם/מספר" class="w-full glass bg-transparent rounded-3xl p-6 text-center text-4xl font-black outline-none border border-white/10 mb-8"><button onclick="addTable()" class="w-full bg-white text-black py-5 rounded-3xl font-black text-xl shadow-xl">צור שולחן</button></div>`; document.getElementById('modal-container').classList.remove('hidden'); }
     function addItem(tid, mid) { const t = tables.find(x => x.id === tid), m = menuItems.find(x => x.id === mid); const ex = t.items.find(x => x.id === mid); if(ex) ex.qty++; else t.items.push({...m, qty:1}); save(); openTableModal(tid); }
     function removeItem(tid, mid) { const t = tables.find(x => x.id === tid); t.items = t.items.filter(x => x.id !== mid); save(); openTableModal(tid); }
+    function updateNotes(id, val) { const t = tables.find(x => x.id === id); t.notes = val; save(); }
     function changeUser() { const u = prompt("שם עובד:"); if(u) { document.getElementById('current-staff-name').textContent = u; localStorage.setItem('atmos_staff', u); } }
     function updateClock() { const now = new Date(); const dateStr = now.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: '2-digit' }); document.getElementById('date-time-display').innerHTML = `${now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}<br>${dateStr}`; }
-    function switchTab(id) { /* יתווסף בשלב הבא עם הארכיון */ }
+    function switchTab(id) {}
 
     init();
   </script>
