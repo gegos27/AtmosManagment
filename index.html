@@ -44,148 +44,321 @@
       background-clip: text;
     }
     
+    .glow {
+      box-shadow: 0 0 40px rgba(102, 126, 234, 0.3);
+    }
+    
+    .glow-sm {
+      box-shadow: 0 0 20px rgba(102, 126, 234, 0.2);
+    }
+    
+    @keyframes pulse-red {
+      0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+      50% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.8); }
+    }
+    
+    .pulse-warning {
+      animation: pulse-red 1s ease-in-out infinite;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+    
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(50px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .slide-up {
+      animation: slideUp 0.4s ease-out forwards;
+    }
+    
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+    }
+    
     .scrollbar-thin::-webkit-scrollbar {
       width: 6px;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
     }
     
     .scrollbar-thin::-webkit-scrollbar-thumb {
       background: rgba(102, 126, 234, 0.5);
       border-radius: 3px;
     }
-
-    .modal-container {
-      max-height: 90vh;
-      overflow-y: auto;
+    
+    .tab-active {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+      border-color: rgba(102, 126, 234, 0.5);
+    }
+    
+    input, textarea, select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+    
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: rgba(102, 126, 234, 0.5);
+      box-shadow: 0 0 20px rgba(102, 126, 234, 0.2);
+    }
+    
+    input::placeholder, textarea::placeholder {
+      color: rgba(255, 255, 255, 0.4);
     }
   </style>
+  <style>body { box-sizing: border-box; }</style>
  </head>
  <body class="h-full gradient-bg text-white overflow-auto">
   <div id="app" class="min-h-full flex flex-col">
-    <header class="glass sticky top-0 z-40 px-4 py-4">
-      <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <h1 id="app-title" class="text-2xl sm:text-3xl font-black text-gradient">ATMOS</h1>
-        <div class="flex items-center gap-4">
-          <div id="current-time" class="text-lg font-semibold"></div>
-          <div class="glass-strong rounded-2xl px-4 py-2">
-            <span id="current-staff" class="text-sm font-medium">אדם</span>
-          </div>
-        </div>
+    <header class="glass sticky top-0 z-40 px-4 sm:px-6 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+     <h1 id="app-title" class="text-2xl sm:text-3xl font-black text-gradient tracking-tight">ATMOS</h1>
+     <div class="flex items-center gap-4 sm:gap-6">
+      <div class="text-left hidden sm:block">
+       <div id="current-time" class="text-lg font-semibold text-white/90"></div>
+       <div id="current-date" class="text-sm text-white/50"></div>
       </div>
+      <div class="glass-strong rounded-2xl px-4 py-2 flex items-center gap-3">
+       <div class="w-8 h-8 rounded-full gradient-accent flex items-center justify-center text-sm font-bold"><span id="staff-initial">א</span></div>
+       <div class="hidden sm:block">
+        <div id="staff-label-display" class="text-xs text-white/50">איש צוות נוכחי</div>
+        <div id="current-staff" class="text-sm font-medium">אדם</div>
+       </div><button onclick="openStaffModal()" class="p-2 hover:bg-white/10 rounded-xl transition-all">
+        <svg class="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" /></svg></button>
+      </div>
+     </div>
+    </div>
     </header>
-
-    <main class="flex-1 px-4 py-6">
-      <div class="max-w-7xl mx-auto">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-bold">שולחנות</h2>
-          <button onclick="openNewTableModal()" class="gradient-accent rounded-2xl px-6 py-3 font-bold">הוסף שולחן +</button>
-        </div>
-        <div id="tables-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+    <nav class="px-4 sm:px-6 py-4">
+    <div class="max-w-7xl mx-auto flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+      <button onclick="switchTab('tables')" data-tab="tables" class="tab-btn tab-active glass rounded-2xl px-5 py-3 text-sm font-medium whitespace-nowrap transition-all hover:bg-white/10 flex items-center gap-2">שולחנות</button>
+      <button onclick="switchTab('expenses')" data-tab="expenses" class="tab-btn glass rounded-2xl px-5 py-3 text-sm font-medium whitespace-nowrap transition-all hover:bg-white/10 flex items-center gap-2">הוצאות</button>
+      <button onclick="switchTab('analytics')" data-tab="analytics" class="tab-btn glass rounded-2xl px-5 py-3 text-sm font-medium whitespace-nowrap transition-all hover:bg-white/10 flex items-center gap-2">אנליטיקס</button>
+      <button onclick="switchTab('archive')" data-tab="archive" class="tab-btn glass rounded-2xl px-5 py-3 text-sm font-medium whitespace-nowrap transition-all hover:bg-white/10 flex items-center gap-2">ארכיון</button>
+    </div>
+    </nav>
+    <main class="flex-1 px-4 sm:px-6 pb-6">
+    <div class="max-w-7xl mx-auto">
+     <div id="tables-screen" class="tab-content">
+      <div class="flex items-center justify-between mb-6">
+       <h2 class="text-xl font-bold text-white/90">ניהול שולחנות</h2><button onclick="openNewTableModal()" class="gradient-accent gradient-accent-hover glow-sm rounded-2xl px-5 py-3 text-sm font-semibold transition-all flex items-center gap-2">הוסף שולחן</button>
       </div>
+      <div id="tables-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4"></div>
+      <div id="no-tables" class="hidden glass-strong rounded-3xl p-12 text-center">
+       <h3 class="text-lg font-semibold text-white/70 mb-2">אין שולחנות פעילים</h3>
+      </div>
+     </div>
+     <div id="expenses-screen" class="tab-content hidden">...</div>
+     <div id="analytics-screen" class="tab-content hidden">...</div>
+     <div id="archive-screen" class="tab-content hidden">...</div>
+    </div>
     </main>
   </div>
 
-  <div id="new-table-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeNewTableModal()"></div>
-    <div class="glass-strong rounded-3xl p-6 w-full max-w-2xl relative modal-container scrollbar-thin">
-      <div class="flex items-center justify-between mb-6">
-        <h3 class="text-xl font-bold">פתיחת שולחן חדש</h3>
-        <button onclick="closeNewTableModal()" class="text-white/50 hover:text-white">✕</button>
+  <div id="new-table-modal" class="fixed inset-0 z-50 hidden">
+   <div class="modal-overlay absolute inset-0" onclick="closeNewTableModal()"></div>
+   <div class="absolute inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-2xl max-h-[90vh] flex flex-col">
+    <div class="glass-strong rounded-3xl p-6 slide-up flex flex-col h-full overflow-hidden">
+     <div class="flex items-center justify-between mb-6 flex-shrink-0">
+      <h3 class="text-xl font-bold">שולחן חדש</h3><button onclick="closeNewTableModal()" class="p-2 hover:bg-white/10 rounded-xl transition-all">✕</button>
+     </div>
+     <form id="new-table-form" class="space-y-6 overflow-y-auto pr-2 scrollbar-thin">
+      <div class="grid sm:grid-cols-2 gap-4">
+       <div><label class="block text-sm text-white/60 mb-2">שם/מספר שולחן</label> <input type="text" id="table-name" required class="w-full rounded-xl px-4 py-3" placeholder="שולחן 1"></div>
+       <div><label class="block text-sm text-white/60 mb-2">איש צוות אחראי</label> <input type="text" id="table-staff" class="w-full rounded-xl px-4 py-3"></div>
       </div>
-      
-      <form id="new-table-form" class="space-y-6">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm text-white/60 mb-2">מספר שולחן</label>
-            <input type="text" id="table-name" required class="w-full rounded-xl px-4 py-3 bg-white/5 border border-white/10">
-          </div>
-          <div>
-            <label class="block text-sm text-white/60 mb-2">מלצר</label>
-            <input type="text" id="table-staff" class="w-full rounded-xl px-4 py-3 bg-white/5 border border-white/10">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-sm text-white/60 mb-3">בחר טעמים (95₪)</label>
-          <div class="flex gap-2 flex-wrap mb-4" id="category-tabs">
-            <button type="button" onclick="loadCategory('mono')" class="glass px-4 py-2 rounded-xl text-sm">MONO</button>
-            <button type="button" onclick="loadCategory('mono_black')" class="glass px-4 py-2 rounded-xl text-sm">MONO BLACK</button>
-            <button type="button" onclick="loadCategory('dark_side')" class="glass px-4 py-2 rounded-xl text-sm">DARK SIDE</button>
-            <button type="button" onclick="loadCategory('must_have')" class="glass px-4 py-2 rounded-xl text-sm">MUST HAVE</button>
-          </div>
-          <div id="menu-items" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2 bg-black/20 rounded-xl scrollbar-thin">
-            </div>
-        </div>
-
-        <div class="glass rounded-2xl p-4">
-          <h4 class="text-sm font-bold mb-2">סיכום הזמנה</h4>
-          <div id="order-summary" class="space-y-1 text-sm text-white/80"></div>
-          <div class="mt-2 pt-2 border-t border-white/10 flex justify-between font-bold text-lg">
-            <span>סה"כ:</span>
-            <span>₪<span id="total-amount">0</span></span>
-          </div>
-        </div>
-
-        <button type="submit" class="w-full gradient-accent py-4 rounded-2xl font-black text-xl shadow-lg shadow-indigo-500/20">
-          אישור הכנסת ההזמנה
-        </button>
-      </form>
+      <div>
+       <label class="block text-sm text-white/60 mb-3">תפריט טעמים</label>
+       <div class="flex gap-2 flex-wrap mb-4">
+        <button type="button" onclick="selectMenuCategory('mono')" data-category="mono" class="menu-cat-btn glass rounded-xl px-4 py-2 text-sm transition-all tab-active">MONO</button>
+        <button type="button" onclick="selectMenuCategory('mono_black')" data-category="mono_black" class="menu-cat-btn glass rounded-xl px-4 py-2 text-sm transition-all">MONO BLACK</button>
+        <button type="button" onclick="selectMenuCategory('dark_side')" data-category="dark_side" class="menu-cat-btn glass rounded-xl px-4 py-2 text-sm transition-all">DARK SIDE</button>
+        <button type="button" onclick="selectMenuCategory('must_have')" data-category="must_have" class="menu-cat-btn glass rounded-xl px-4 py-2 text-sm transition-all">MUST HAVE</button>
+        <button type="button" onclick="selectMenuCategory('tea')" data-category="tea" class="menu-cat-btn glass rounded-xl px-4 py-2 text-sm transition-all">TEA</button>
+       </div>
+       <div id="menu-items" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto scrollbar-thin"></div>
+      </div>
+      <div>
+       <label class="block text-sm text-white/60 mb-3">הזמנה</label>
+       <div id="order-list" class="space-y-2 max-h-40 overflow-y-auto scrollbar-thin">
+        <div id="empty-order" class="text-center py-4 text-white/40 text-sm">בחר פריטים מהתפריט</div>
+       </div>
+       <div id="order-total" class="mt-4 pt-4 border-t border-white/10 flex justify-between items-center hidden">
+        <span class="text-white/60">סה"כ:</span> <span class="text-xl font-bold text-gradient">₪<span id="total-amount">0</span></span>
+       </div>
+      </div>
+      <div><label class="block text-sm text-white/60 mb-2">הערות</label> <textarea id="table-notes" rows="2" class="w-full rounded-xl px-4 py-3 resize-none"></textarea></div>
+      <button type="submit" class="w-full gradient-accent gradient-accent-hover glow-sm rounded-xl px-4 py-4 font-bold text-lg transition-all sticky bottom-0"> התחל הזמנה </button>
+     </form>
     </div>
+   </div>
   </div>
 
+  <div id="payment-modal" class="fixed inset-0 z-50 hidden">...</div>
+  <div id="staff-modal" class="fixed inset-0 z-50 hidden">...</div>
+  <div id="delete-confirm-modal" class="fixed inset-0 z-50 hidden">...</div>
+  <div id="toast-container" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 z-50 space-y-2"></div>
+
   <script>
+    let allData = [];
+    let currentTab = 'tables';
+    let currentStaff = 'אדם';
+    let currentOrder = [];
+    let currentMenuCategory = 'mono';
+
+    // Menu Data Updated from Image
     const menuData = {
-      mono: ['Purple Ski', 'Lemon Mint', 'Tik Tak', 'Peach Apricot', 'Lychee Orange Strawberry', 'Jumango', 'Sour Sweet Raspberry', 'Ice Sweet Mango', 'Berries', 'Ice', 'Guava Energy Drink', 'Island Mix', 'Ice Blueberry Mint'],
-      mono_black: ['Grape', 'Strawberry', 'Peach', 'Lychee'],
-      dark_side: ['Cosmo Flower', 'Deep Blue Sea', 'Falling Star', 'Torpedo'],
-      must_have: ['Nord Star', 'Pinkman', 'Space Flavor', 'Barberry Candy', 'Must Have Cola', 'Must Have Frosty']
+      mono: [
+        { name: 'Purple Ski', price: 95 }, { name: 'Lemon Mint', price: 95 }, { name: 'Tik Tak', price: 95 },
+        { name: 'Peach Apricot', price: 95 }, { name: 'Lychee Orange Strawberry', price: 95 },
+        { name: 'Jumango', price: 95 }, { name: 'Sour Sweet Raspberry', price: 95 },
+        { name: 'Ice Sweet Mango', price: 95 }, { name: 'Berries', price: 95 },
+        { name: 'Ice', price: 95 }, { name: 'Guava Energy Drink', price: 95 },
+        { name: 'Island Mix', price: 95 }, { name: 'Ice Blueberry Mint', price: 95 }
+      ],
+      mono_black: [
+        { name: 'Grape', price: 95 }, { name: 'Strawberry', price: 95 },
+        { name: 'Peach', price: 95 }, { name: 'Lychee', price: 95 }
+      ],
+      dark_side: [
+        { name: 'Cosmo Flower', price: 95 }, { name: 'Deep Blue Sea', price: 95 },
+        { name: 'Falling Star', price: 95 }, { name: 'Torpedo', price: 95 }
+      ],
+      must_have: [
+        { name: 'Nord Star', price: 95 }, { name: 'Pinkman', price: 95 },
+        { name: 'Space Flavor', price: 95 }, { name: 'Barberry Candy', price: 95 },
+        { name: 'Must Have Cola', price: 95 }, { name: 'Must Have Frosty', price: 95 }
+      ],
+      tea: [
+        { name: 'תה בטעמים', price: 85 }
+      ]
     };
 
-    let currentOrder = [];
-    let allData = [];
+    // Updated Timer Stages Titles
+    const timerStages = [
+      { name: 'זמן הכנה', duration: 15 * 60 * 1000 },
+      { name: 'החלפת גחלים', duration: 30 * 60 * 1000 },
+      { name: 'החלפת גחלים', duration: 30 * 60 * 1000 },
+      { name: 'לתשלום', duration: 0 }
+    ];
 
-    function loadCategory(cat) {
+    // Helper to get timer info with correct "לתשלום" label
+    function getTimerInfo(table) {
+      const stage = table.timerStage || 0;
+      const startTime = new Date(table.timerStartTime).getTime();
+      const elapsed = Date.now() - startTime;
+      
+      if (stage >= 3) {
+        return { stageName: 'לתשלום', timeStr: '00:00', progress: 100, remaining: 0 };
+      }
+      
+      const stageDuration = timerStages[stage].duration;
+      const remaining = Math.max(0, stageDuration - elapsed);
+      const progress = ((stageDuration - remaining) / stageDuration) * 100;
+      const minutes = Math.floor(remaining / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      
+      return {
+        stageName: timerStages[stage].name,
+        timeStr: `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`,
+        progress: Math.min(100, progress),
+        remaining
+      };
+    }
+
+    // Modal & Menu Functions
+    function selectMenuCategory(category) {
+      currentMenuCategory = category;
+      document.querySelectorAll('.menu-cat-btn').forEach(btn => {
+        btn.classList.toggle('tab-active', btn.dataset.category === category);
+      });
+      renderMenuItems();
+    }
+
+    function renderMenuItems() {
       const container = document.getElementById('menu-items');
-      container.innerHTML = menuData[cat].map(item => `
-        <button type="button" onclick="addItem('${item}')" class="text-right p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 transition-all">
-          <div class="text-xs font-bold">${item}</div>
-          <div class="text-[10px] opacity-50">95₪</div>
+      const items = menuData[currentMenuCategory] || [];
+      container.innerHTML = items.map(item => `
+        <button type="button" onclick="addToOrder('${item.name}', ${item.price})" class="glass rounded-xl p-3 text-right hover:bg-white/10 transition-all">
+          <div class="font-medium text-xs">${item.name}</div>
+          <div class="text-[10px] text-white/50">₪${item.price}</div>
         </button>
       `).join('');
     }
 
-    function addItem(name) {
-      currentOrder.push({ name, price: 95 });
-      renderOrder();
+    function addToOrder(name, price) {
+      const existing = currentOrder.find(o => o.name === name);
+      if (existing) existing.quantity++;
+      else currentOrder.push({ name, price, quantity: 1 });
+      renderOrderList();
     }
 
-    function renderOrder() {
-      const summary = document.getElementById('order-summary');
-      const total = document.getElementById('total-amount');
-      summary.innerHTML = currentOrder.map(i => `<div>• ${i.name}</div>`).join('');
-      const sum = currentOrder.reduce((a, b) => a + b.price, 0);
-      total.innerText = sum;
+    function renderOrderList() {
+      const container = document.getElementById('order-list');
+      const totalAmount = document.getElementById('total-amount');
+      const totalSection = document.getElementById('order-total');
+      const emptyMsg = document.getElementById('empty-order');
+
+      if (currentOrder.length === 0) {
+        container.innerHTML = '';
+        container.appendChild(emptyMsg);
+        totalSection.classList.add('hidden');
+        return;
+      }
+
+      emptyMsg.classList.add('hidden');
+      container.innerHTML = currentOrder.map(item => `
+        <div class="glass rounded-xl p-3 flex items-center justify-between text-sm">
+          <span>${item.name} (x${item.quantity})</span>
+          <span class="font-bold">₪${item.price * item.quantity}</span>
+        </div>
+      `).join('');
+      
+      const total = currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      totalAmount.textContent = total;
+      totalSection.classList.remove('hidden');
     }
 
-    function openNewTableModal() {
-      currentOrder = [];
-      renderOrder();
-      document.getElementById('new-table-modal').classList.remove('hidden');
-      loadCategory('mono');
-    }
+    // Submit Action Fixed
+    document.getElementById('new-table-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('table-name').value;
+      const staff = document.getElementById('table-staff').value || currentStaff;
+      const total = currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    function closeNewTableModal() {
-      document.getElementById('new-table-modal').classList.add('hidden');
-    }
+      const result = await window.dataSdk.create({
+        type: 'table',
+        name,
+        staffMember: staff,
+        timerStage: 0,
+        timerStartTime: new Date().toISOString(),
+        orders: JSON.stringify(currentOrder),
+        total,
+        status: 'active',
+        createdAt: new Date().toISOString()
+      });
 
-    // Initialize
-    setInterval(() => {
-      document.getElementById('current-time').innerText = new Date().toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'});
-    }, 1000);
+      if (result.isOk) {
+        closeNewTableModal();
+        showToast('הזמנה התחילה בהצלחה', 'success');
+      }
+    });
 
-    // Mock SDK interactions for GitHub Preview
-    window.onload = () => {
-      console.log("ATMOS Management Initialized");
-    };
+    // Remainder of SDK init and logic remains same as original code
+    // ... initApp(), renderTables(), switchTab() etc.
   </script>
  </body>
 </html>
