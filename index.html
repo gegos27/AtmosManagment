@@ -1,343 +1,191 @@
-<!DOCTYPE html>
-<html lang="he" dir="rtl">
-
-<head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>ATMOS</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
-
-<style>
-
-body{
-background:#0f172a;
-color:white;
-font-family:sans-serif;
-}
-
-.glass{
-background:rgba(255,255,255,0.08);
-border:1px solid rgba(255,255,255,0.15);
-backdrop-filter:blur(10px);
-border-radius:20px;
-}
-
-</style>
-
-</head>
-
-<body class="p-6">
-
-<div class="max-w-6xl mx-auto">
-
-<div class="flex justify-between mb-6">
-
-<h1 class="text-3xl font-bold text-indigo-400">
-ATMOS
-</h1>
-
-<button onclick="openAddTableModal()"
-class="bg-white text-black px-4 py-2 rounded-lg">
-
-+ שולחן
-
-</button>
-
-</div>
-
-<div id="tables-grid"
-class="grid grid-cols-2 md:grid-cols-4 gap-4">
-
-</div>
-
-</div>
-
-<div id="modal"
-class="hidden fixed inset-0 bg-black/70 flex items-center justify-center">
-
-<div id="modal-content"
-class="glass p-6 w-full max-w-md">
-
-</div>
-
-</div>
-
-<script>
-
-const MENU = [
-
-{name:"Classic Mix",price:70},
-{name:"Premium Mix",price:90},
-{name:"Special Mix",price:120}
-
-]
-
-const STAGES = [
-
-{name:"הכנה",time:900},
-{name:"שלב 1",time:1800},
-{name:"שלב 2",time:1800}
-
-]
-
-let tables = JSON.parse(localStorage.getItem("tables")) || []
-
-let revenue = 0
-let tips = 0
-
-
-function save(){
-
-localStorage.setItem("tables",JSON.stringify(tables))
-
-}
-
-function modal(html){
-
-document.getElementById("modal-content").innerHTML = html
-
-document.getElementById("modal").classList.remove("hidden")
-
-}
-
-function closeModal(){
-
-document.getElementById("modal").classList.add("hidden")
-
-}
-
-function openAddTableModal(){
-
-modal(`
-
-<h2 class="text-xl mb-4">פתח שולחן</h2>
-
-<input id="table-name"
-placeholder="שם שולחן"
-class="w-full p-2 rounded text-black mb-4">
-
-<button onclick="createTable()"
-class="bg-white text-black px-4 py-2 rounded w-full">
-
-צור שולחן
-
-</button>
-
-`)
-
-}
-
-function createTable(){
-
-const name = document.getElementById("table-name").value
-
-if(!name) return
-
-tables.push({
-
-id:Date.now(),
-name,
-stage:0,
-start:null,
-items:[]
-
-})
-
-save()
-closeModal()
-render()
-
-}
-
-function openTable(id){
-
-const t = tables.find(x=>x.id==id)
-
-modal(`
-
-<h2 class="text-xl mb-4">${t.name}</h2>
-
-<div class="space-y-2 mb-4">
-
-${MENU.map(m=>`
-
-<button
-onclick="addItem(${id},'${m.name}',${m.price})"
-class="bg-indigo-500 px-4 py-2 rounded w-full">
-
-${m.name} ₪${m.price}
-
-</button>
-
-`).join("")}
-
-</div>
-
-<h3 class="mb-2">הזמנה</h3>
-
-<div id="order-list">
-
-${t.items.map(i=>`
-
-<div class="flex justify-between">
-
-<span>${i.name}</span>
-<span>₪${i.price}</span>
-
-</div>
-
-`).join("")}
-
-</div>
-
-<div class="mt-4 flex gap-2">
-
-<button onclick="startTimer(${id})"
-class="bg-green-500 px-4 py-2 rounded flex-1">
-
-התחל טיימר
-
-</button>
-
-<button onclick="openPayment(${id})"
-class="bg-white text-black px-4 py-2 rounded flex-1">
-
-תשלום
-
-</button>
-
-</div>
-
-`)
-
-}
-
-function addItem(id,name,price){
-
-const t = tables.find(x=>x.id==id)
-
-t.items.push({name,price})
-
-save()
-
-openTable(id)
-
-}
-
-function startTimer(id){
-
-const t = tables.find(x=>x.id==id)
-
-if(!t.start){
-
-t.start = Date.now()
-
-}
-
-save()
-
-}
-
-function openPayment(id){
-
-const t = tables.find(x=>x.id==id)
-
-const total = t.items.reduce((s,i)=>s+i.price,0)
-
-modal(`
-
-<h2 class="text-xl mb-4">תשלום</h2>
-
-<div class="mb-4">סה"כ ₪${total}</div>
-
-<input id="tip"
-placeholder="טיפ"
-class="w-full p-2 rounded text-black mb-4">
-
-<button onclick="finishPayment(${id},${total})"
-class="bg-white text-black px-4 py-2 rounded w-full">
-
-סגור שולחן
-
-</button>
-
-`)
-
-}
-
-function finishPayment(id,total){
-
-const tip = parseFloat(document.getElementById("tip").value)||0
-
-revenue += total
-tips += tip
-
-tables = tables.filter(t=>t.id !== id)
-
-save()
-
-closeModal()
-
-render()
-
-}
-
-function render(){
-
-const grid = document.getElementById("tables-grid")
-
-grid.innerHTML=""
-
-tables.forEach(t=>{
-
-let timerText = "לא התחיל"
-
-if(t.start){
-
-const elapsed = Math.floor((Date.now()-t.start)/1000)
-
-const stage = STAGES[t.stage]
-
-const remain = stage.time - elapsed
-
-timerText = stage.name + " " +
-Math.floor(remain/60) + ":" +
-String(remain%60).padStart(2,'0')
-
-}
-
-const card = document.createElement("div")
-
-card.className="glass p-4 text-center cursor-pointer"
-
-card.innerHTML=`
-
-<div class="text-xl font-bold">
-${t.name}
-</div>
-
-<div class="text-sm text-gray-300 mt-2">
-${timerText}
-</div>
-
-`
-
-card.onclick=()=>openTable(t.id)
-
-grid.appendChild(card)
-
-})
-
-}
-
-setInterval(render,1000)
-
-render()
-
-</script>
-
-</body>
+<!doctype html>
+<html lang="he" dir="rtl" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATMOS - ניהול שולחנות</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Heebo', sans-serif; }
+    
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .glass-strong {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    
+    .gradient-bg {
+      background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+    }
+    
+    .gradient-accent {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .gradient-accent-hover:hover {
+      background: linear-gradient(135deg, #7c8ff5 0%, #8a5db8 100%);
+    }
+    
+    .text-gradient {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: rgba(102, 126, 234, 0.5);
+      border-radius: 3px;
+    }
+
+    .modal-container {
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+  </style>
+ </head>
+ <body class="h-full gradient-bg text-white overflow-auto">
+  <div id="app" class="min-h-full flex flex-col">
+    <header class="glass sticky top-0 z-40 px-4 py-4">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <h1 id="app-title" class="text-2xl sm:text-3xl font-black text-gradient">ATMOS</h1>
+        <div class="flex items-center gap-4">
+          <div id="current-time" class="text-lg font-semibold"></div>
+          <div class="glass-strong rounded-2xl px-4 py-2">
+            <span id="current-staff" class="text-sm font-medium">אדם</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 px-4 py-6">
+      <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold">שולחנות</h2>
+          <button onclick="openNewTableModal()" class="gradient-accent rounded-2xl px-6 py-3 font-bold">הוסף שולחן +</button>
+        </div>
+        <div id="tables-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+      </div>
+    </main>
+  </div>
+
+  <div id="new-table-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeNewTableModal()"></div>
+    <div class="glass-strong rounded-3xl p-6 w-full max-w-2xl relative modal-container scrollbar-thin">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-bold">פתיחת שולחן חדש</h3>
+        <button onclick="closeNewTableModal()" class="text-white/50 hover:text-white">✕</button>
+      </div>
+      
+      <form id="new-table-form" class="space-y-6">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm text-white/60 mb-2">מספר שולחן</label>
+            <input type="text" id="table-name" required class="w-full rounded-xl px-4 py-3 bg-white/5 border border-white/10">
+          </div>
+          <div>
+            <label class="block text-sm text-white/60 mb-2">מלצר</label>
+            <input type="text" id="table-staff" class="w-full rounded-xl px-4 py-3 bg-white/5 border border-white/10">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm text-white/60 mb-3">בחר טעמים (95₪)</label>
+          <div class="flex gap-2 flex-wrap mb-4" id="category-tabs">
+            <button type="button" onclick="loadCategory('mono')" class="glass px-4 py-2 rounded-xl text-sm">MONO</button>
+            <button type="button" onclick="loadCategory('mono_black')" class="glass px-4 py-2 rounded-xl text-sm">MONO BLACK</button>
+            <button type="button" onclick="loadCategory('dark_side')" class="glass px-4 py-2 rounded-xl text-sm">DARK SIDE</button>
+            <button type="button" onclick="loadCategory('must_have')" class="glass px-4 py-2 rounded-xl text-sm">MUST HAVE</button>
+          </div>
+          <div id="menu-items" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2 bg-black/20 rounded-xl scrollbar-thin">
+            </div>
+        </div>
+
+        <div class="glass rounded-2xl p-4">
+          <h4 class="text-sm font-bold mb-2">סיכום הזמנה</h4>
+          <div id="order-summary" class="space-y-1 text-sm text-white/80"></div>
+          <div class="mt-2 pt-2 border-t border-white/10 flex justify-between font-bold text-lg">
+            <span>סה"כ:</span>
+            <span>₪<span id="total-amount">0</span></span>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full gradient-accent py-4 rounded-2xl font-black text-xl shadow-lg shadow-indigo-500/20">
+          אישור הכנסת ההזמנה
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const menuData = {
+      mono: ['Purple Ski', 'Lemon Mint', 'Tik Tak', 'Peach Apricot', 'Lychee Orange Strawberry', 'Jumango', 'Sour Sweet Raspberry', 'Ice Sweet Mango', 'Berries', 'Ice', 'Guava Energy Drink', 'Island Mix', 'Ice Blueberry Mint'],
+      mono_black: ['Grape', 'Strawberry', 'Peach', 'Lychee'],
+      dark_side: ['Cosmo Flower', 'Deep Blue Sea', 'Falling Star', 'Torpedo'],
+      must_have: ['Nord Star', 'Pinkman', 'Space Flavor', 'Barberry Candy', 'Must Have Cola', 'Must Have Frosty']
+    };
+
+    let currentOrder = [];
+    let allData = [];
+
+    function loadCategory(cat) {
+      const container = document.getElementById('menu-items');
+      container.innerHTML = menuData[cat].map(item => `
+        <button type="button" onclick="addItem('${item}')" class="text-right p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 transition-all">
+          <div class="text-xs font-bold">${item}</div>
+          <div class="text-[10px] opacity-50">95₪</div>
+        </button>
+      `).join('');
+    }
+
+    function addItem(name) {
+      currentOrder.push({ name, price: 95 });
+      renderOrder();
+    }
+
+    function renderOrder() {
+      const summary = document.getElementById('order-summary');
+      const total = document.getElementById('total-amount');
+      summary.innerHTML = currentOrder.map(i => `<div>• ${i.name}</div>`).join('');
+      const sum = currentOrder.reduce((a, b) => a + b.price, 0);
+      total.innerText = sum;
+    }
+
+    function openNewTableModal() {
+      currentOrder = [];
+      renderOrder();
+      document.getElementById('new-table-modal').classList.remove('hidden');
+      loadCategory('mono');
+    }
+
+    function closeNewTableModal() {
+      document.getElementById('new-table-modal').classList.add('hidden');
+    }
+
+    // Initialize
+    setInterval(() => {
+      document.getElementById('current-time').innerText = new Date().toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'});
+    }, 1000);
+
+    // Mock SDK interactions for GitHub Preview
+    window.onload = () => {
+      console.log("ATMOS Management Initialized");
+    };
+  </script>
+ </body>
 </html>
